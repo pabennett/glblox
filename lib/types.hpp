@@ -1,3 +1,5 @@
+#include <boost/tuple/tuple.hpp>
+
 typedef unsigned char byte;
 
 typedef struct{
@@ -15,4 +17,10 @@ typedef struct{
 typedef struct{
    int x, y;
 } vector2i;
+
+struct Position {
+  Position(int x, int y, int z)
+    : tuple(x,y,z) {}
+  boost::tuples::tuple<int, int, int> tuple;
+};
 

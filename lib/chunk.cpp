@@ -5,8 +5,6 @@
 // 
 // @author         Peter A Bennett
 // @copyright      (c) 2012 Peter A Bennett
-// @version        $Rev: 2 $
-// @lastrevision   $Date: 2012-03-11 15:19:25 +0000 (Sun, 11 Mar 2012) $
 // @license        LGPL      
 // @email          pab850@googlemail.com
 // @contact        www.bytebash.com
@@ -14,129 +12,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "chunk.hpp"
-
-bool operator==(const vector4f &a, const vector4f &b)
-{
-   return a.x == b.x &&
-          a.y == b.y &&
-          a.z == b.z &&
-          a.w == b.w;
-}
-
-bool operator==(const Position &a, const Position &b)
-{
-  return a.tuple.get<0>() == b.tuple.get<0>() &&
-         a.tuple.get<1>() == b.tuple.get<1>() &&
-         a.tuple.get<2>() == b.tuple.get<2>();
-}
-
-bool operator<(const Position &a, const Position &b)
-{
-   if (a.tuple.get<0>() < b.tuple.get<0>())
-     return true;
-   if (b.tuple.get<0>() < a.tuple.get<0>())
-     return false;
-   // a1==b1: continue with element 2
-   if (a.tuple.get<1>() < b.tuple.get<1>())
-     return true;
-   if (b.tuple.get<1>() < a.tuple.get<1>())
-     return false;
-   // a2 == b2: continue with element 3
-   if (a.tuple.get<2>() < b.tuple.get<2>())
-     return true;
-   return false; // early out
-}
-
-std::size_t hash_value(const Position &e)
-{
-  std::size_t seed = 0;
-  boost::hash_combine(seed, e.tuple.get<0>());
-  boost::hash_combine(seed, e.tuple.get<1>());
-  boost::hash_combine(seed, e.tuple.get<2>());
-  return seed;
-}
-  
-Volume::Volume(int sz)
-{
-   size = sz;
-}
-
-void Volume::fill()
-{
-   int x,y,z;
-   for(x = 0; x < size; x++)
-   {
-      for (y = 0; y < size; y++)
-      {
-         for (z = 0; z < size; z++)
-         {
-            set(x,y,z,1);
-         }
-      }
-   }
-}
-
-bool Volume::blockLeftVisible(int x, int y, int z)
-{
-   return not(is_solid(x-1,y,z));
-}
-
-bool Volume::blockRightVisible(int x, int y, int z)
-{
-   return not(is_solid(x+1,y,z));
-}
-
-bool Volume::blockAboveVisible(int x, int y, int z)
-{
-   return not(is_solid(x,y+1,z));
-}
-
-bool Volume::blockBelowVisible(int x, int y, int z)
-{
-   return not(is_solid(x,y-1,z));
-}
-
-bool Volume::blockFrontVisible(int x, int y, int z)
-{
-   return not(is_solid(x,y,z+1));
-}
-
-bool Volume::blockBackVisible(int x, int y, int z)
-{
-   return not(is_solid(x,y,z-1));
-}
-
-void Volume::empty()
-{
-   data.clear();
-}
-
-bool Volume::is_solid(int x, int y, int z) 
-{
-   Position key(x,y,z);
-   return not (data.find(key) == data.end());
-}
-
-byte Volume::get(int x, int y, int z)
-{
-   Position key(x,y,z);
-   return data[key].blockType;
-}
-
-void Volume::set(int x, int y, int z, byte value)
-{
-   Position key(x,y,z);
-   block element;
-   if(value != 0)
-   {
-      element.blockType = value;
-      data[key] = element;
-   }
-   else if(is_solid(x,y,z))
-   {
-      data.erase(key);
-   }
-}
 
 void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
 {  
@@ -319,9 +194,7 @@ void Chunk::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp, bool useF
    if (modified)
    {
       modified = false;
-      //std::cout << "CPP: Starting update of chunk VBO..." << program << std::endl;
       update(useFastMeshBuilder);
-      //std::cout << "CPP: VBO update complete..." << std::endl;
    }
    
    /* Frustrum Culling */
@@ -396,7 +269,7 @@ void Chunk::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp, bool useF
 }
 
 
-Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z, int chunk_size) : data(chunk_size)
+Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z, int chunk_size) : chunkData(chunk_size)
 {
    dim.x = chunk_size;
    dim.y = chunk_size;
@@ -434,20 +307,20 @@ Chunk::~Chunk()
   
 void Chunk::fill()
 {
-   data.fill();
+   chunkData.fill();
    modified = true;
 }
 
 void Chunk::empty()
 {
-   data.empty();
+   chunkData.empty();
    modified = true;
 }
 
 void Chunk::pyramid()
 {
    int x,y,z = 0;
-   data.empty();
+   chunkData.empty();
    for (x = 0; x < size; x++)
    {
       for (y = 0; y < size; y++)
@@ -456,7 +329,7 @@ void Chunk::pyramid()
          {
             if (x >= y and x <= size-y and z >= y and z <= size-y)
             {
-               data.set(x,y,z,1);
+               chunkData.set(x,y,z,1);
             }
          }
       }
@@ -470,7 +343,7 @@ void Chunk::random()
    int x,y,z;
    //int random = rand() % 2; //Random 0 to 1
    float simplex;
-   data.empty();
+   chunkData.empty();
    for (x = 0; x < size; x++)
    {
       for (z = 0; z < size; z++)
@@ -479,7 +352,7 @@ void Chunk::random()
          {
             simplex = glm::simplex(glm::vec3((pos.x + x) / 32.f, (pos.y + y) / 64.f, (pos.z + z) / 32.f)) * 255;
             simplex = simplex >0.5f?1:0;
-            data.set(x,y,z,int(simplex));
+            chunkData.set(x,y,z,int(simplex));
          }
       }
    }
@@ -530,7 +403,7 @@ void Chunk::floatingRock()
             }
             if (density>3.1)
             {
-               data.set(x,y,z,1);
+               chunkData.set(x,y,z,1);
             }
          }
       }
@@ -547,7 +420,7 @@ void Chunk::sphere()
    int j = radius;
    int k = radius;
    int x,y,z;
-   data.empty();
+   chunkData.empty();
    for (x = 0; x < size; x++)
    {
       for (y = 0; y < size; y++)
@@ -556,7 +429,7 @@ void Chunk::sphere()
          {
             if (((x-h)*(x-h) + (y-j)*(y-j) + (z-k)*(z-k)) < r_sq)
             {
-               data.set(x,y,z,1);
+               chunkData.set(x,y,z,1);
             }
          }
       }
@@ -573,14 +446,14 @@ void Chunk::load(byte* initialiser, int chunk_size)
    }
    else
    {
-      data.empty();
+      chunkData.empty();
       for (x = 0; x < chunk_size; x++)
       {
          for (y = 0; y < chunk_size; y++)
          {
             for (z = 0; z < chunk_size; z++)
             {
-               data.set(x,y,z,initialiser[x + (y * size) + (z * size * size)]);
+               chunkData.set(x,y,z,initialiser[x + (y * size) + (z * size * size)]);
             }
          }
       }
@@ -598,7 +471,7 @@ void Chunk::set(byte initialiser, int x, int y, int z)
    z = z>=dim.z?dim.z-1:z;
    z = z<0?0:z;
    modified = true;
-   data.set(x,y,z,initialiser);
+   chunkData.set(x,y,z,initialiser);
 }
 
 int Chunk::get(int x, int y, int z)
@@ -609,7 +482,7 @@ int Chunk::get(int x, int y, int z)
    y = y<0?0:y;
    z = z>=dim.z?dim.z-1:z;
    z = z<0?0:z;
-   return data.get(x,y,z);
+   return chunkData.get(x,y,z);
 }
 
 // Generate a triangle mesh which can be used to represent
@@ -664,7 +537,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(data.blockAboveVisible(sliceX,major_axis,sliceY))
+                     if(chunkData.blockAboveVisible(sliceX,major_axis,sliceY))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -678,7 +551,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(data.blockBelowVisible(sliceX,major_axis,sliceY))
+                     if(chunkData.blockBelowVisible(sliceX,major_axis,sliceY))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -692,7 +565,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(data.blockLeftVisible(major_axis,sliceY,sliceX))
+                     if(chunkData.blockLeftVisible(major_axis,sliceY,sliceX))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -706,7 +579,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(data.blockRightVisible(major_axis,sliceY,sliceX))
+                     if(chunkData.blockRightVisible(major_axis,sliceY,sliceX))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -720,7 +593,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(data.blockFrontVisible(sliceX,sliceY,major_axis))
+                     if(chunkData.blockFrontVisible(sliceX,sliceY,major_axis))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -734,7 +607,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(data.blockBackVisible(sliceX,sliceY,major_axis))
+                     if(chunkData.blockBackVisible(sliceX,sliceY,major_axis))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -871,39 +744,39 @@ void Chunk::meshBuilderFast()
           
    // Loop through every voxel in the volume and create the vertices required
    // to render exposed faces. Faces hidden by surrounding cubes are not drawn.
-   for(boost::unordered_map<Position, block>::iterator ii=data.data.begin(); ii!=data.data.end(); ++ii)
+   for(boost::unordered_map<Position, block>::iterator ii=chunkData.begin(); ii!=chunkData.end(); ++ii)
    {        
       // Get the voxel chunk coords.
       x = (*ii).first.tuple.get<0>();
       y = (*ii).first.tuple.get<1>();
       z = (*ii).first.tuple.get<2>();
             
-      if(data.blockLeftVisible(x,y,z))
+      if(chunkData.blockLeftVisible(x,y,z))
       {
          setPos(x, y, z, LEFT);
       }
       
-      if(data.blockRightVisible(x,y,z))
+      if(chunkData.blockRightVisible(x,y,z))
       {
          setPos(x, y, z, RIGHT);
       }
       
-      if(data.blockBelowVisible(x,y,z))
+      if(chunkData.blockBelowVisible(x,y,z))
       {
          setPos(x, y, z, BELOW);
       }
             
-      if(data.blockAboveVisible(x,y,z))
+      if(chunkData.blockAboveVisible(x,y,z))
       {
          setPos(x, y, z, ABOVE);
       }
       
-      if(data.blockBackVisible(x,y,z))
+      if(chunkData.blockBackVisible(x,y,z))
       {
          setPos(x, y, z, BACK);
       }
       
-      if(data.blockFrontVisible(x,y,z))
+      if(chunkData.blockFrontVisible(x,y,z))
       {
          setPos(x, y, z, FRONT);
       }
@@ -1064,136 +937,3 @@ void Chunk::setPos(int x, int y, int z, facePos facing)
       break;
    }
 }                        
-// Generates a list of vertices required to render a cube face and
-// adds them to the appropriate array. There is an array for each
-// cube face direction.
-// void Chunk::setPos(int x, int y, int z, facePos facing, int lastDrawIdx)
-// {   
-   // vertex vert;
-
-   // switch (facing) 
-   // {
-   // case ABOVE:
-      // // Check to see if the previous voxel is solid, if so then extend faces.
-      // if(data.is_solid(x-1,y,z) and !verticesAbove.empty() and lastDrawIdx == x-1)
-      // {
-         // // Extend face.
-         // verticesAbove[verticesAbove.size() - 2].x = x+1;
-         // verticesAbove[verticesAbove.size() - 5].x = x+1;
-         // verticesAbove[verticesAbove.size() - 6].x = x+1;
-      // }
-      // else
-      // {
-         // // Add a new face.
-         // vert.x = x+1; vert.y = y+1; vert.z = z+1; vert.w = y; verticesAbove.push_back(vert); //C 
-         // vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesAbove.push_back(vert); //D
-         // vert.x = x;   vert.y = y+1; vert.z = z+1; vert.w = y; verticesAbove.push_back(vert); //B
-         // vert.x = x;   vert.y = y+1; vert.z = z+1; vert.w = y; verticesAbove.push_back(vert); //B 
-         // vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesAbove.push_back(vert); //D
-         // vert.x = x;   vert.y = y+1; vert.z = z;   vert.w = y; verticesAbove.push_back(vert); //A
-      // }
-      // break;
-   // case BELOW:
-      // // Check to see if the previous voxel is solid, if so then extend faces.
-      // if(data.is_solid(x-1,y,z) and !verticesBelow.empty() and lastDrawIdx == x-1)
-      // {
-         // // Extend face.
-         // verticesBelow[verticesBelow.size() - 3].x = x+1;
-         // verticesBelow[verticesBelow.size() - 4].x = x+1;
-         // verticesBelow[verticesBelow.size() - 6].x = x+1;
-      // }
-      // else
-      // {
-         // // Add a new face.
-         // vert.x = x+1; vert.y = y;   vert.z = z+1; vert.w = y; verticesBelow.push_back(vert); //C
-         // vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesBelow.push_back(vert); //B
-         // vert.x = x+1; vert.y = y;   vert.z = z;   vert.w = y; verticesBelow.push_back(vert); //D
-         // vert.x = x+1; vert.y = y;   vert.z = z;   vert.w = y; verticesBelow.push_back(vert); //D
-         // vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesBelow.push_back(vert); //B
-         // vert.x = x;   vert.y = y;   vert.z = z;   vert.w = y; verticesBelow.push_back(vert); //A
-      // }
-      // break;
-   // case LEFT:
-      // // Check to see if the previous voxel is solid, if so then extend faces.
-      // if(data.is_solid(x,y,z-1) and !verticesLeft.empty() and lastDrawIdx == z-1)
-      // {
-         // // Extend face.
-         // verticesLeft[verticesLeft.size() - 3].z = z+1;
-         // verticesLeft[verticesLeft.size() - 4].z = z+1;
-         // verticesLeft[verticesLeft.size() - 6].z = z+1;
-      // }
-      // else
-      // {
-         // // Add a new face.
-         // vert.x = x;   vert.y = y+1; vert.z = z+1; vert.w = y; verticesLeft.push_back(vert); //A
-         // vert.x = x;   vert.y = y+1; vert.z = z;   vert.w = y; verticesLeft.push_back(vert); //B
-         // vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesLeft.push_back(vert); //D
-         // vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesLeft.push_back(vert); //D
-         // vert.x = x;   vert.y = y+1; vert.z = z;   vert.w = y; verticesLeft.push_back(vert); //B
-         // vert.x = x;   vert.y = y;   vert.z = z;   vert.w = y; verticesLeft.push_back(vert); //C
-      // }
-      // break;
-   // case RIGHT:
-      // // Check to see if the previous voxel is solid, if so then extend faces.
-      // if(data.is_solid(x,y,z-1) and !verticesRight.empty() and lastDrawIdx == z-1)
-      // {
-         // // Extend face.
-         // verticesRight[verticesRight.size() - 2].z = z+1;
-         // verticesRight[verticesRight.size() - 5].z = z+1;
-         // verticesRight[verticesRight.size() - 6].z = z+1;
-      // }
-      // else
-      // {
-         // // Add a new face.
-         // vert.x = x+1; vert.y = y+1; vert.z = z+1; vert.w = y; verticesRight.push_back(vert); //B
-         // vert.x = x+1; vert.y = y;   vert.z = z+1; vert.w = y; verticesRight.push_back(vert); //C
-         // vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesRight.push_back(vert); //A
-         // vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesRight.push_back(vert); //A
-         // vert.x = x+1; vert.y = y;   vert.z = z+1; vert.w = y; verticesRight.push_back(vert); //C
-         // vert.x = x+1; vert.y = y;   vert.z = z;   vert.w = y; verticesRight.push_back(vert); //D
-      // }
-      // break;
-   // case FRONT:
-      // // Check to see if the previous voxel is solid, if so then extend faces.
-      // if(data.is_solid(x,y+1,z) and !verticesFront.empty() and lastDrawIdx == y-1)
-      // {
-         // // Extend face.
-         // verticesFront[verticesFront.size() - 1].y = y+1;
-         // verticesFront[verticesFront.size() - 5].y = y+1;
-         // verticesFront[verticesFront.size() - 6].y = y+1;
-      // }
-      // else
-      // {
-         // // Add a new face.
-         // vert.x = x+1; vert.y = y+1; vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //A
-         // vert.x = x;   vert.y = y+1; vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //B
-         // vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //C
-         // vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //C
-         // vert.x = x+1; vert.y = y;   vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //D
-         // vert.x = x+1; vert.y = y+1; vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //A
-      // }
-      // break;
-   // case BACK:
-      // // Check to see if the previous voxel is solid, if so then extend faces.
-      // if(data.is_solid(x,y+1,z) and !verticesBack.empty() and lastDrawIdx == y-1)
-      // {
-         // // Extend face.
-         // verticesBack[verticesBack.size() - 3].y = y+1;
-         // verticesBack[verticesBack.size() - 4].y = y+1;
-         // verticesBack[verticesBack.size() - 5].y = y+1;
-      // }
-      // else
-      // {
-         // // Add a new face.
-         // vert.x = x;   vert.y = y;   vert.z = z;   vert.w = y; verticesBack.push_back(vert); //D
-         // vert.x = x;   vert.y = y+1; vert.z = z;   vert.w = y; verticesBack.push_back(vert); //A
-         // vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesBack.push_back(vert); //B
-         // vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesBack.push_back(vert); //B
-         // vert.x = x+1; vert.y = y;   vert.z = z;   vert.w = y; verticesBack.push_back(vert); //C
-         // vert.x = x;   vert.y = y;   vert.z = z;   vert.w = y; verticesBack.push_back(vert); //D
-      // }
-      // break;
-   // default:
-      // break;
-   // }
-// }

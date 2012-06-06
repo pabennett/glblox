@@ -15,17 +15,12 @@
 #include <glm/gtc/noise.hpp> 
 #include "timeit.cpp"
 #include "simplex.c"
+#include "smallVolume.cpp"
 
 enum facePos { ABOVE, BELOW, LEFT, RIGHT, FRONT, BACK };
 enum xfacePos {DRAW_LEFT, DRAW_RIGHT, DRAW_BOTH_X};
 enum yfacePos {DRAW_ABOVE, DRAW_BELOW, DRAW_BOTH_Y};
 enum zfacePos {DRAW_FRONT, DRAW_BACK, DRAW_BOTH_Z};
-
-struct Position {
-  Position(int x, int y, int z)
-    : tuple(x,y,z) {}
-  boost::tuples::tuple<int, int, int> tuple;
-};
 
 typedef struct{
    xfacePos x; yfacePos y; zfacePos z;
@@ -37,38 +32,9 @@ typedef struct{
    byte x, y, z, w;
 } vertex;
 
-typedef struct{
-   byte blockType;      // The material type of the block.
-} block;
-
-typedef boost::unordered_map<Position, block> smallVolume;
-
-// typedef struct{
-   // bool backFace
-
-// Wrapper for STL map class
-class Volume
-{ 
-   public:
-      smallVolume data;
-      int size;
-      Volume(int);
-      bool is_solid(int, int, int);
-      byte get(int, int, int);
-      void set(int, int, int, byte);
-      void fill();
-      void empty();
-      bool blockLeftVisible(int, int, int);
-      bool blockRightVisible(int, int, int);
-      bool blockAboveVisible(int, int, int);
-      bool blockBelowVisible(int, int, int);
-      bool blockFrontVisible(int, int, int);
-      bool blockBackVisible(int, int, int);
-};
-
 class Chunk
 {
-   Volume data;                                 // Map of bytes representing voxel volume.
+   smallVolume chunkData;                       // Map of bytes representing voxel volume.
          
    //std::vector<vector3f> normals;
    
