@@ -24,6 +24,9 @@ vertex:
    }
 
 fragment:
+   
+   import: colourmaps
+
    out vec3 fragment;
    
    varying int texcoord;
@@ -36,9 +39,15 @@ fragment:
    {
       // Jet Colourmap      
       float k = 4*(texcoord/float(255));
-      float red = clamp(min(k - 1.5, -k + 4.5),0.0,1.0);
-      float green = clamp(min(k - 0.5, -k + 3.5),0.0,1.0);
-      float blue  = clamp(min(k + 0.5, -k + 2.5),0.0,1.0);
+      
+      float red, green, blue;
+      vec3 colours;
+      
+      colours = cubeHelix(k);
+      red = colours.x;
+      green = colours.y;
+      blue = colours.z;
+      
       // Attenuate facecolour for each normal to accentuate the cubes.
       if(data.fnormal.y == 0)
       {
