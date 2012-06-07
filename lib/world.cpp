@@ -43,7 +43,7 @@ World::World(int dimx, int dimy, int dimz, int size, bool useFastMeshBuilder)
             pos.y = y * chunk_size;
             pos.z = z * chunk_size;
             std::cout << "CPP: World: Generating chunk:" << pos.x << "," << pos.y << "," << pos.z << std::endl;
-            chunks.push_back(new Chunk(pos.x, pos.y, pos.z, chunk_size));
+            chunks.push_back(new Chunk(pos.x, pos.y, pos.z, chunk_size, dim.y * chunk_size));
          }
       }
    }

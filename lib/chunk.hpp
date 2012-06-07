@@ -36,14 +36,13 @@ class Chunk
 {
    smallVolume chunkData;                       // Map of bytes representing voxel volume.
          
-   //std::vector<vector3f> normals;
-   
    faceGroup visibleFaceGroups;                 // Which face groups are visible.
    
    vector3i dim;                                // The dimensions of the chunk
    glm::vec3 pos;                               // The position of the chunk.
    glm::vec3 centre;                            // The position of the chunk centre.
    int size;                                    // The size of the volume.
+   int worldHeight;                             // The height of the world in voxels.
    bool modified;                               // Flag to indicate the chunk data has been modified.  
    
    GLuint verticesFrontVBO;                     // Vertex Buffer Object for chunk faces.
@@ -57,6 +56,7 @@ class Chunk
    GLint posAttrib; 
    GLuint normAttrib;
    GLuint worldPosAttrib;
+   GLuint worldHeightAttrib;
    unsigned int voxels;
    
    bool firstDrawCall;                          // Flag to enable one-time draw operations.
@@ -68,11 +68,10 @@ class Chunk
       std::vector<vertex> verticesRight;        // Array holding all triangles on right faces.
       std::vector<vertex> verticesAbove;        // Array holding all triangles on above faces.
       std::vector<vertex> verticesBelow;        // Array holding all triangles on below faces.
-      //std::vector<vertex> vertices;             // Display list, contains any three vertex arrays.
       int verticesRenderedCount;                // The number of vertices rendered in this volume.
    
    
-      Chunk(int, int, int, int);                // Construct
+      Chunk(int, int, int, int, int);           // Construct
       ~Chunk();                                 // Destruct
       void load(byte*, int);                    // Load external data into the chunk.
       int get(int, int, int);                   // Get the value of a specific voxel.

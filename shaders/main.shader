@@ -5,9 +5,10 @@ vertex:
    uniform vec3 normal;
    uniform vec3 worldPosition;      // The base position of the chunk in the world.
    uniform mat4 mvp;                // Model-view projection matrix.
+   uniform int worldHeight;
    //uniform mat4 modelview;
    
-   varying int texcoord;
+   varying float texcoord;
    
    out Data{
       vec3 fnormal;
@@ -19,7 +20,7 @@ vertex:
       vec4 vertex = vec4(position.x, position.y, position.z, 1);
       data.fnormal = normal;
       // Depth = length((modelview * (vertex + vectorOffset)).xyz);
-      texcoord = int(position.w + worldPosition.y);
+      texcoord = float(position.w + worldPosition.y) / worldHeight;
       gl_Position = mvp * (vertex + vectorOffset);
    }
 
@@ -29,7 +30,7 @@ fragment:
 
    out vec3 fragment;
    
-   varying int texcoord;
+   varying float texcoord;
    
    in Data{
       vec3 fnormal;
@@ -38,12 +39,11 @@ fragment:
    void main()
    {
       // Jet Colourmap      
-      float k = 4*(texcoord/float(255));
       
       float red, green, blue;
       vec3 colours;
       
-      colours = cubeHelix(k);
+      colours = cubeHelix(texcoord);
       red = colours.x;
       green = colours.y;
       blue = colours.z;
