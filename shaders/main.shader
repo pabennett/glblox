@@ -37,13 +37,12 @@ fragment:
    } data;
    
    void main()
-   {
-      // Jet Colourmap      
-      
+   {   
       float red, green, blue;
       vec3 colours;
       
-      colours = cubeHelix(texcoord);
+      colours = earth(texcoord);
+
       red = colours.x;
       green = colours.y;
       blue = colours.z;
