@@ -1,3 +1,38 @@
+GlBlox - Rendering experiments
+==============================
+
 Description
+-----------
 
 GlBlox is an OpenGL volume renderer that draws volumes as a blocky mesh.
+
+
+Details
+-------
+
+* Core rendering engine implemented in C++ with a Python wrapper for prototyping.
+* Uses the Pyglet Python module to provide OpenGL window manager and input
+* Generate volumes using heightmaps, perlin noise or simple procedures.
+
+Features implemented
+--------------------
+
+* Volume storage classes, volume loading and volume modification.
+* Mesh generators for optimised or standard 'blocky' meshes.
+* Quaternion based freelook camera and mouse controls.
+* Frustrum culling.
+* Back-face culling.
+* Block shading using colourmaps (GLSL)
+
+Features to add
+---------------
+
+* Collision detection.
+* Volume storage and loading with compression + memory optimisations.
+* Block picking and volume modification.
+* Paging for loading large worlds.
+
+Further reading
+--------------------
+
+http://www.bytebash.com
