@@ -49,6 +49,44 @@ vec3 jet(float x)
    return vec3(red, green, blue);
 }
 
+vec3 thermal(float x)
+{
+   // Thermal colourmap LUT
+   const vec3 THERMAL_MAP[5] = vec3[]
+   (
+      vec3(0, 0, 0),
+      vec3(0.3, 0, 0.7),
+      vec3(1, 0.2, 0),
+      vec3(1, 1, 0),
+      vec3(1, 1, 1)
+   );
+   
+   // Compute LUT index and lerp value
+   int i = int(floor(x / 0.25));
+   float lerp = fract(x / 0.25);
+
+   // R,G,B Output
+   float red;
+   float green;
+   float blue;
+   
+   if (x != 1.0)
+   {
+      // Lerp between LUT entries for input values < 1.0
+      red = mix(THERMAL_MAP[i].x, THERMAL_MAP[i+1].x, lerp); 
+      green = mix(THERMAL_MAP[i].y, THERMAL_MAP[i+1].y, lerp); 
+      blue = mix(THERMAL_MAP[i].z, THERMAL_MAP[i+1].z, lerp); 
+   }
+   else
+   {
+      // If the input is maximum just return the upper LUT entry.
+      red = THERMAL_MAP[4].x;
+      green = THERMAL_MAP[4].y;
+      blue = THERMAL_MAP[4].z;
+   }
+   return vec3(red, green, blue);
+}
+
 uniform vec3 EARTH_MAP_R[7] = vec3[] 
 ( 
    vec3(0.0, 0.0, 0.0000),

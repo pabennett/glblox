@@ -41,7 +41,7 @@ fragment:
       float red, green, blue;
       vec3 colours;
       
-      colours = earth(texcoord);
+      colours = thermal(texcoord);
 
       red = colours.x;
       green = colours.y;
