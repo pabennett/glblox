@@ -84,6 +84,33 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
    }
 }
 
+void World::deleteBlockAt(int x, int y, int z)
+{
+   int xi, yi, zi;    // Chunk coords (within world)
+   int xvi, yvi, zvi; // Voxel coords (within chunk)
+   xi = x / chunk_size; 
+   yi = y / chunk_size; 
+   zi = z / chunk_size; 
+   xvi = x % chunk_size;
+   yvi = y % chunk_size;
+   zvi = z % chunk_size;
+   int index = xi + yi * dim.x + zi * dim.x * dim.y; // Index of chunk
+   // Get the index of the chunk encapsulating the given x,y,z coord.
+   if (x >= 0 and xi <= dim.x and y >= 0 and yi <= dim.y and z >= 0 and zi <= dim.z)
+   {
+      // Delete the voxel of the given coord in this chunk.
+      if(!chunks.empty())
+      {
+         std::cout << "CPP: Testing block at " << xvi << "," << yvi << "," << zvi << std::endl;
+         if(chunks[index]->get(xvi, yvi, zvi)>0)
+         {
+            std::cout << "CPP: Deleting block at " << xvi << "," << yvi << "," << zvi << std::endl;
+            chunks[index]->set(0, xvi, yvi, zvi);
+         }
+      }
+   }
+}
+
 void World::fillSpheres()
 {
    int x,y,z;

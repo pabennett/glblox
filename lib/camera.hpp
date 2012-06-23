@@ -49,6 +49,9 @@ class Camera
       void setMVP(GLuint);
       void perspective(int, int, float, float, float); 
       void setPos(float, float, float);
+      float getPosX();
+      float getPosY();
+      float getPosZ();
       void orient(float, float);
       void move(float, float, float);
       bool visibleY();

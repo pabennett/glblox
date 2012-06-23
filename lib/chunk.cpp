@@ -755,7 +755,7 @@ void Chunk::meshBuilderFast()
       x = (*ii).first.tuple.get<0>();
       y = (*ii).first.tuple.get<1>();
       z = (*ii).first.tuple.get<2>();
-            
+       
       if(chunkData.blockLeftVisible(x,y,z))
       {
          setPos(x, y, z, LEFT);

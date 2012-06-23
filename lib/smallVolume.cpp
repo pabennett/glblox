@@ -116,14 +116,21 @@ bool smallVolume::is_solid(int x, int y, int z)
 byte smallVolume::get(int x, int y, int z)
 {
    Position key(x,y,z);
-   return volumeData[key].blockType;
+   if(is_solid(x,y,z))
+   {
+      return volumeData[key].blockType;
+   }
+   else
+   {
+      return 0;
+   }
 }
 
 void smallVolume::set(int x, int y, int z, byte value)
 {
    Position key(x,y,z);
    block element;
-   if(value != 0)
+   if(value > 0)
    {
       element.blockType = value;
       volumeData[key] = element;

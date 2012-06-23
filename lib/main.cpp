@@ -65,6 +65,18 @@ extern "C" {
    {
       obj -> setPos(x, y, z);
    }
+   float C_getPosX(Camera* obj) 
+   {
+      return obj -> getPosX();
+   }
+   float C_getPosY(Camera* obj) 
+   {
+      return obj -> getPosY();
+   }
+   float C_getPosZ(Camera* obj) 
+   {
+      return obj -> getPosZ();
+   }
    void C_Orient(Camera* obj, float yaw, float pitch) 
    {
       obj -> orient(yaw, pitch);
@@ -101,6 +113,11 @@ extern "C" {
    void worldRandom(World* world)
    {
       world->random();
+   }
+   
+   void worldDeleteBlockAt(World* world, int x, int y, int z)
+   {
+      world->deleteBlockAt(x, y, z);
    }
    
    int worldNumVertices(World* world)

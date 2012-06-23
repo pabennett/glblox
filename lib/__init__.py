@@ -32,6 +32,15 @@ CAM_pers = vol_lib.C_setPerspective
 CAM_pers.argtypes = c_void_p, c_int, c_int, c_float, c_float, c_float,
 CAM_setPos = vol_lib.C_setPos
 CAM_setPos.argtypes = c_void_p, c_float, c_float, c_float, 
+CAM_getPosX = vol_lib.C_getPosX
+CAM_getPosX.restype = c_float
+CAM_getPosX.argtypes = c_void_p,
+CAM_getPosY = vol_lib.C_getPosY
+CAM_getPosY.argtypes = c_void_p,
+CAM_getPosY.restype = c_float
+CAM_getPosZ = vol_lib.C_getPosZ
+CAM_getPosZ.restype = c_float
+CAM_getPosZ.argtypes = c_void_p,
 CAM_orient = vol_lib.C_Orient
 CAM_orient.argtypes = c_void_p, c_float, c_float, 
 CAM_move = vol_lib.C_Move
@@ -50,6 +59,12 @@ class Camera:
         vol_lib.C_Orient(self.obj, yaw, pitch)
     def move(self, dx, dy, dz):
         vol_lib.C_Move(self.obj, dx, dy, dz)
+    def getPos(self):
+        x = vol_lib.C_getPosX(self.obj)
+        y = vol_lib.C_getPosY(self.obj)
+        z = vol_lib.C_getPosZ(self.obj)
+        return (x,y,z)
+    
 
 WORLD_draw = vol_lib.worldDraw
 WORLD_draw.argtypes = c_void_p, c_void_p, c_uint
@@ -60,6 +75,8 @@ WORLD_numVertices.argtypes = c_void_p,
 WORLD_numVertices.restype = c_int
 WORLD_load = vol_lib.worldLoad
 WORLD_load.argtypes = c_void_p, c_void_p, c_int, c_int, c_int, c_int
+WORLD_deleteBlockAt = vol_lib.worldDeleteBlockAt
+WORLD_deleteBlockAt.argtypes = c_void_p, c_int, c_int, c_int
         
 class World:
     def __init__(self,dimx,dimy,dimz,chunk_size,fast_meshes):
@@ -78,3 +95,5 @@ class World:
     def load(self, array, x, y, z, chunk_size):
         c_array_p = array.ctypes.data_as(c_char_p)
         vol_lib.worldLoad(self.obj,c_array_p, x, y, z, chunk_size)
+    def deleteBlockAt(self, x, y, z):
+        vol_lib.worldDeleteBlockAt(self.obj, x, y, z)

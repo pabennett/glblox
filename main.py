@@ -19,7 +19,7 @@ from pyglet.gl import *
 from gletools import ShaderProgram
 
 from pyglet.window import key
-from pyglet.clock import schedule
+from pyglet import clock
 from pyglet import font
 
 from lib import Camera, World
@@ -39,11 +39,18 @@ window.set_exclusive_mouse(True)
 console_font = font.load('DejaVu Sans Mono', 14, bold=False, italic=False)
 fps = pyglet.clock.ClockDisplay(color=(1,1,1,1),
                                 font=console_font)                                                    
-label = pyglet.text.Label("Tempstring", 
+renderingLabel = pyglet.text.Label("Tempstring", 
                           font_name='DejaVu Sans Mono',
                           font_size=14, 
                           x=window.width * 0.005, 
-                          y=window.height * 0.98)                                      
+                          y=window.height * 0.98)   
+                          
+positionLabel = pyglet.text.Label("Tempstring", 
+                          font_name='DejaVu Sans Mono',
+                          font_size=14, 
+                          x=window.width * 0.005, 
+                          y=window.height * 0.90)   
+                                 
 pyglet.clock.ClockDisplay()
 wiremode = False
 
@@ -102,7 +109,7 @@ print "Loading World data into chunks..."
 for (x,y,z),chunk in datablocks.items():
     print "Loading chunk: " + str(x) + "," + str(y) + "," + str(z)
     world.load(chunk, x, y, z, chunk_size)
-            
+          
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)
@@ -121,7 +128,21 @@ def update(dt):
 
     if keys[key.T]:
         world.fillSpheres()    
-schedule(update)         
+clock.schedule(update)         
+
+
+def statusUpdates(dt):
+    position = camera.getPos()
+    renderingLabel.text = ("Vertices: {:,d}".format(world.numVertices()))
+    positionLabel.text = ("Position: x: {0[0]};  y: {0[1]}; z: {0[2]}".format(position))
+
+
+def volumeUpdates(dt):
+    position = camera.getPos()
+    world.deleteBlockAt(int(position[0]), int(position[1]), int(position[2]))
+
+clock.schedule_interval(statusUpdates, 0.2)
+clock.schedule_interval(volumeUpdates, 0.2)
 
 # Set up the Mouse handler (pyglet)
 @window.event
@@ -142,8 +163,8 @@ def on_draw():
     # Draw World   
     world.draw(program.id, camera)
     # Show vertex count
-    label.text = ("Vertices: {:,d}".format(world.numVertices()))
-    label.draw()    
+    renderingLabel.draw()   
+    positionLabel.draw()
     # Show FPS       
     fps.draw()
 

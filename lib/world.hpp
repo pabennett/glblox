@@ -4,7 +4,7 @@
 #include "chunk.cpp"    // Defines a chunk class which acts as a voxel container
                         // and provides utility functions for accessing or 
                         // modifying the data as well as rendering the data. 
-                        
+           
 class World
 {
       vector3i dim;                                // The dimensions of the world in chunks.
@@ -18,6 +18,7 @@ class World
       void fillSpheres();                          // Fill the world with spheres.
       void fill();                                 // Fill the world.
       void random();                               // Randomly generated world.
+      void deleteBlockAt(int, int, int);           // Delete the voxel at the specified world coord.
       void load(byte*, int, int, int, int);
    private:
       bool useFastMeshBuilder;                     // Use fast mesh generation.
