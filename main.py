@@ -109,7 +109,7 @@ print "Loading World data into chunks..."
 for (x,y,z),chunk in datablocks.items():
     print "Loading chunk: " + str(x) + "," + str(y) + "," + str(z)
     world.load(chunk, x, y, z, chunk_size)
-               
+         
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)

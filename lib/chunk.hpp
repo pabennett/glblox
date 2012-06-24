@@ -90,7 +90,7 @@ class Chunk
    private:
       bool modified;                               // Flag to indicate the chunk data has been modified. 
 
-      void setPos(int, int, int, facePos); // Specific to the positions array.
+      void setPos(int, int, int, facePos, int); // Specific to the positions array.
       void addFace(int, int, int, int, int, int,
                    facePos, byte);              // Add a face to the vertex list.
 };

@@ -388,22 +388,17 @@ void Chunk::meshBuilderSlow()
    byte marker = 0;
    
    std::map<std::pair<int,int>, int> vismap;   
-         
-   std::cout << "CPP: Starting mesh generation loop..." << std::endl;
-   int64 time = GetTimeMs64();
-   int64 now = GetTimeMs64();    
+            
    // Loop through every voxel in the volume and create the vertices required
    // to render exposed faces. Faces hidden by surrounding cubes are not drawn.
    for(i = 0; i < 6; i++)
    {
       facing = AXIS[i];
-      now = GetTimeMs64();
       for(major_axis = 0; major_axis < dim.z; major_axis++)
       {
          // Take successive 2D slices of the volume data over the major axis.
          // Build a visibility map for the mesh builder to use.
          vismap.clear();
-         now = GetTimeMs64();
          switch (facing)
          {
             case ABOVE:
@@ -412,7 +407,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(chunkData.blockAboveVisible(sliceX,major_axis,sliceY))
+                     if(chunkData.is_solid(sliceX,major_axis,sliceY) and chunkData.blockAboveVisible(sliceX,major_axis,sliceY))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -426,7 +421,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(chunkData.blockBelowVisible(sliceX,major_axis,sliceY))
+                     if(chunkData.is_solid(sliceX,major_axis,sliceY) and chunkData.blockBelowVisible(sliceX,major_axis,sliceY))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -440,7 +435,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(chunkData.blockLeftVisible(major_axis,sliceY,sliceX))
+                     if(chunkData.is_solid(major_axis,sliceY,sliceX) and chunkData.blockLeftVisible(major_axis,sliceY,sliceX))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -454,7 +449,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(chunkData.blockRightVisible(major_axis,sliceY,sliceX))
+                     if(chunkData.is_solid(major_axis,sliceY,sliceX) and chunkData.blockRightVisible(major_axis,sliceY,sliceX))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -468,7 +463,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(chunkData.blockFrontVisible(sliceX,sliceY,major_axis))
+                     if(chunkData.is_solid(sliceX,sliceY,major_axis) and chunkData.blockFrontVisible(sliceX,sliceY,major_axis))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -482,7 +477,7 @@ void Chunk::meshBuilderSlow()
                   for(sliceX = 0; sliceX < dim.x; sliceX++)
                   {
                      // Check visibility.
-                     if(chunkData.blockBackVisible(sliceX,sliceY,major_axis))
+                     if(chunkData.is_solid(sliceX,sliceY,major_axis) and chunkData.blockBackVisible(sliceX,sliceY,major_axis))
                      {
                         // Mark this cell as visible. The mesh gen will draw this cell
                         vismap[std::make_pair(sliceX,sliceY)] = 1;
@@ -589,10 +584,7 @@ void Chunk::meshBuilderSlow()
             }
          }
       }
-      std::cout << "CPP: ...Mesh for one axis group complete: " << GetTimeMs64() - now << "ms" <<  std::endl;
    }
-   now = GetTimeMs64();
-   std::cout << "CPP: ...Mesh generation complete: " << now - time << "ms" <<  std::endl;
 }
 
 // Generate a triangle mesh which can be used to represent
@@ -600,13 +592,6 @@ void Chunk::meshBuilderSlow()
 void Chunk::meshBuilderFast()
 {
    int x,y,z;              // Chunk x,y,z
-   
-   bool drawLeft = false;
-   bool drawRight = false;
-   bool drawAbove = false;
-   bool drawBelow = false;
-   bool drawFront = false;
-   bool drawBack = false;
        
    verticesLeft.clear();   // Clear any previous mesh data.
    verticesRight.clear();
@@ -614,44 +599,60 @@ void Chunk::meshBuilderFast()
    verticesBelow.clear();
    verticesFront.clear();
    verticesBack.clear();
+   
+   // First check to see if the chunk is completely full.
+   if(chunkData.is_full())
+   {
+      // The chunk is full, create a primitive mesh.
+      setPos(0, 0, 0, LEFT, size);
+      setPos(0, 0, 0, RIGHT, size);
+      setPos(0, 0, 0, ABOVE, size);
+      setPos(0, 0, 0, BELOW, size);
+      setPos(0, 0, 0, BACK, size);
+      setPos(0, 0, 0, FRONT, size);
+   }
+   else
+   {
+      // The chunk is not full, build the mesh normally.
           
-   // Loop through every voxel in the volume and create the vertices required
-   // to render exposed faces. Faces hidden by surrounding cubes are not drawn.
-   for(boost::unordered_map<Position, block>::iterator ii=chunkData.begin(); ii!=chunkData.end(); ++ii)
-   {        
-      // Get the voxel chunk coords.
-      x = (*ii).first.tuple.get<0>();
-      y = (*ii).first.tuple.get<1>();
-      z = (*ii).first.tuple.get<2>();
-       
-      if(chunkData.blockLeftVisible(x,y,z))
-      {
-         setPos(x, y, z, LEFT);
-      }
-      
-      if(chunkData.blockRightVisible(x,y,z))
-      {
-         setPos(x, y, z, RIGHT);
-      }
-      
-      if(chunkData.blockBelowVisible(x,y,z))
-      {
-         setPos(x, y, z, BELOW);
-      }
-            
-      if(chunkData.blockAboveVisible(x,y,z))
-      {
-         setPos(x, y, z, ABOVE);
-      }
-      
-      if(chunkData.blockBackVisible(x,y,z))
-      {
-         setPos(x, y, z, BACK);
-      }
-      
-      if(chunkData.blockFrontVisible(x,y,z))
-      {
-         setPos(x, y, z, FRONT);
+      // Loop through every voxel in the volume and create the vertices required
+      // to render exposed faces. Faces hidden by surrounding cubes are not drawn.
+      for(boost::unordered_map<Position, block>::iterator ii=chunkData.begin(); ii!=chunkData.end(); ++ii)
+      {        
+         // Get the voxel chunk coords.
+         x = (*ii).first.tuple.get<0>();
+         y = (*ii).first.tuple.get<1>();
+         z = (*ii).first.tuple.get<2>();
+          
+         if(chunkData.blockLeftVisible(x,y,z))
+         {
+            setPos(x, y, z, LEFT, 1);
+         }
+         
+         if(chunkData.blockRightVisible(x,y,z))
+         {
+            setPos(x, y, z, RIGHT, 1);
+         }
+         
+         if(chunkData.blockBelowVisible(x,y,z))
+         {
+            setPos(x, y, z, BELOW, 1);
+         }
+               
+         if(chunkData.blockAboveVisible(x,y,z))
+         {
+            setPos(x, y, z, ABOVE, 1);
+         }
+         
+         if(chunkData.blockBackVisible(x,y,z))
+         {
+            setPos(x, y, z, BACK, 1);
+         }
+         
+         if(chunkData.blockFrontVisible(x,y,z))
+         {
+            setPos(x, y, z, FRONT, 1);
+         }
       }
    }
 }
@@ -744,64 +745,65 @@ void Chunk::addFace(int xmin, int xmax,
    }
 }
                                        
-void Chunk::setPos(int x, int y, int z, facePos facing)
+void Chunk::setPos(int x, int y, int z, facePos facing, int size)
 {   
    vertex vert;
+   int s = size;
    
    switch (facing) 
    {
    case ABOVE:
       // Add a new face.
-      vert.x = x+1; vert.y = y+1; vert.z = z+1; vert.w = y; verticesAbove.push_back(vert); //C 
-      vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesAbove.push_back(vert); //D
-      vert.x = x;   vert.y = y+1; vert.z = z+1; vert.w = y; verticesAbove.push_back(vert); //B
-      vert.x = x;   vert.y = y+1; vert.z = z+1; vert.w = y; verticesAbove.push_back(vert); //B 
-      vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesAbove.push_back(vert); //D
-      vert.x = x;   vert.y = y+1; vert.z = z;   vert.w = y; verticesAbove.push_back(vert); //A
+      vert.x = x+s; vert.y = y+s; vert.z = z+s; vert.w = y; verticesAbove.push_back(vert); //C 
+      vert.x = x+s; vert.y = y+s; vert.z = z;   vert.w = y; verticesAbove.push_back(vert); //D
+      vert.x = x;   vert.y = y+s; vert.z = z+s; vert.w = y; verticesAbove.push_back(vert); //B
+      vert.x = x;   vert.y = y+s; vert.z = z+s; vert.w = y; verticesAbove.push_back(vert); //B 
+      vert.x = x+s; vert.y = y+s; vert.z = z;   vert.w = y; verticesAbove.push_back(vert); //D
+      vert.x = x;   vert.y = y+s; vert.z = z;   vert.w = y; verticesAbove.push_back(vert); //A
       break;
    case BELOW:
       // Add a new face.
-      vert.x = x+1; vert.y = y;   vert.z = z+1; vert.w = y; verticesBelow.push_back(vert); //C
-      vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesBelow.push_back(vert); //B
-      vert.x = x+1; vert.y = y;   vert.z = z;   vert.w = y; verticesBelow.push_back(vert); //D
-      vert.x = x+1; vert.y = y;   vert.z = z;   vert.w = y; verticesBelow.push_back(vert); //D
-      vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesBelow.push_back(vert); //B
+      vert.x = x+s; vert.y = y;   vert.z = z+s; vert.w = y; verticesBelow.push_back(vert); //C
+      vert.x = x;   vert.y = y;   vert.z = z+s; vert.w = y; verticesBelow.push_back(vert); //B
+      vert.x = x+s; vert.y = y;   vert.z = z;   vert.w = y; verticesBelow.push_back(vert); //D
+      vert.x = x+s; vert.y = y;   vert.z = z;   vert.w = y; verticesBelow.push_back(vert); //D
+      vert.x = x;   vert.y = y;   vert.z = z+s; vert.w = y; verticesBelow.push_back(vert); //B
       vert.x = x;   vert.y = y;   vert.z = z;   vert.w = y; verticesBelow.push_back(vert); //A
       break;
    case LEFT:
       // Add a new face.
-      vert.x = x;   vert.y = y+1; vert.z = z+1; vert.w = y; verticesLeft.push_back(vert); //A
-      vert.x = x;   vert.y = y+1; vert.z = z;   vert.w = y; verticesLeft.push_back(vert); //B
-      vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesLeft.push_back(vert); //D
-      vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesLeft.push_back(vert); //D
-      vert.x = x;   vert.y = y+1; vert.z = z;   vert.w = y; verticesLeft.push_back(vert); //B
+      vert.x = x;   vert.y = y+s; vert.z = z+s; vert.w = y; verticesLeft.push_back(vert); //A
+      vert.x = x;   vert.y = y+s; vert.z = z;   vert.w = y; verticesLeft.push_back(vert); //B
+      vert.x = x;   vert.y = y;   vert.z = z+s; vert.w = y; verticesLeft.push_back(vert); //D
+      vert.x = x;   vert.y = y;   vert.z = z+s; vert.w = y; verticesLeft.push_back(vert); //D
+      vert.x = x;   vert.y = y+s; vert.z = z;   vert.w = y; verticesLeft.push_back(vert); //B
       vert.x = x;   vert.y = y;   vert.z = z;   vert.w = y; verticesLeft.push_back(vert); //C
       break;
    case RIGHT:
       // Add a new face.
-      vert.x = x+1; vert.y = y+1; vert.z = z+1; vert.w = y; verticesRight.push_back(vert); //B
-      vert.x = x+1; vert.y = y;   vert.z = z+1; vert.w = y; verticesRight.push_back(vert); //C
-      vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesRight.push_back(vert); //A
-      vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesRight.push_back(vert); //A
-      vert.x = x+1; vert.y = y;   vert.z = z+1; vert.w = y; verticesRight.push_back(vert); //C
-      vert.x = x+1; vert.y = y;   vert.z = z;   vert.w = y; verticesRight.push_back(vert); //D
+      vert.x = x+s; vert.y = y+s; vert.z = z+s; vert.w = y; verticesRight.push_back(vert); //B
+      vert.x = x+s; vert.y = y;   vert.z = z+s; vert.w = y; verticesRight.push_back(vert); //C
+      vert.x = x+s; vert.y = y+s; vert.z = z;   vert.w = y; verticesRight.push_back(vert); //A
+      vert.x = x+s; vert.y = y+s; vert.z = z;   vert.w = y; verticesRight.push_back(vert); //A
+      vert.x = x+s; vert.y = y;   vert.z = z+s; vert.w = y; verticesRight.push_back(vert); //C
+      vert.x = x+s; vert.y = y;   vert.z = z;   vert.w = y; verticesRight.push_back(vert); //D
       break;
    case FRONT:
       // Add a new face.
-      vert.x = x+1; vert.y = y+1; vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //A
-      vert.x = x;   vert.y = y+1; vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //B
-      vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //C
-      vert.x = x;   vert.y = y;   vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //C
-      vert.x = x+1; vert.y = y;   vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //D
-      vert.x = x+1; vert.y = y+1; vert.z = z+1; vert.w = y; verticesFront.push_back(vert); //A
+      vert.x = x+s; vert.y = y+s; vert.z = z+s; vert.w = y; verticesFront.push_back(vert); //A
+      vert.x = x;   vert.y = y+s; vert.z = z+s; vert.w = y; verticesFront.push_back(vert); //B
+      vert.x = x;   vert.y = y;   vert.z = z+s; vert.w = y; verticesFront.push_back(vert); //C
+      vert.x = x;   vert.y = y;   vert.z = z+s; vert.w = y; verticesFront.push_back(vert); //C
+      vert.x = x+s; vert.y = y;   vert.z = z+s; vert.w = y; verticesFront.push_back(vert); //D
+      vert.x = x+s; vert.y = y+s; vert.z = z+s; vert.w = y; verticesFront.push_back(vert); //A
       break;
    case BACK:
       // Add a new face.
       vert.x = x;   vert.y = y;   vert.z = z;   vert.w = y; verticesBack.push_back(vert); //D
-      vert.x = x;   vert.y = y+1; vert.z = z;   vert.w = y; verticesBack.push_back(vert); //A
-      vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesBack.push_back(vert); //B
-      vert.x = x+1; vert.y = y+1; vert.z = z;   vert.w = y; verticesBack.push_back(vert); //B
-      vert.x = x+1; vert.y = y;   vert.z = z;   vert.w = y; verticesBack.push_back(vert); //C
+      vert.x = x;   vert.y = y+s; vert.z = z;   vert.w = y; verticesBack.push_back(vert); //A
+      vert.x = x+s; vert.y = y+s; vert.z = z;   vert.w = y; verticesBack.push_back(vert); //B
+      vert.x = x+s; vert.y = y+s; vert.z = z;   vert.w = y; verticesBack.push_back(vert); //B
+      vert.x = x+s; vert.y = y;   vert.z = z;   vert.w = y; verticesBack.push_back(vert); //C
       vert.x = x;   vert.y = y;   vert.z = z;   vert.w = y; verticesBack.push_back(vert); //D
       break;
    default:

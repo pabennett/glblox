@@ -78,14 +78,26 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
       // Pull one chunk from the update queue and update its mesh.
       if(chunkUpdateQueue.size() != 0)
       {
-         chunkUpdateQueue.back()->update(useFastMeshBuilder);
+         chunkUpdateQueue.back()->update(true);
+         if(not useFastMeshBuilder)
+         {
+            // Add this chunk to the mesh optimiser queue.
+            chunkOptimiseQueue.push_back(chunkUpdateQueue.back());
+         }
          chunkUpdateQueue.pop_back();
       }
+      else if (chunkOptimiseQueue.size() != 0)
+      {
+         // If we're done updating chunks with a fast mesh start optimsing meshes.
+         chunkOptimiseQueue.back()->update(false);
+         chunkOptimiseQueue.pop_back();
+      }
+      
       // Call draw on all chunks to render them.
       for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
       {
          // Render the chunk. Cam is used for culling.
-         chunks[i]->draw(program, camPosition, mvp, useFastMeshBuilder);
+         chunks[i]->draw(program, camPosition, mvp, true);
          // Update the vertex counter.
          vertices += chunks[i]->verticesRenderedCount;
       }

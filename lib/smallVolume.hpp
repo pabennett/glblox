@@ -19,6 +19,7 @@ class smallVolume
       void empty();
       bool is_empty();
       bool is_modified();
+      bool is_full();
       void clearModifiedState();
       bool blockLeftVisible(int, int, int);
       bool blockRightVisible(int, int, int);

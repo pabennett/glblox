@@ -11,6 +11,7 @@ class World
       int chunk_size;                              // The dimension of the world chunks.
       std::vector<Chunk*> chunks;                  // Array of chunks representing the world.
       std::vector<Chunk*> chunkUpdateQueue;        // Chunks that require a mesh update.
+      std::vector<Chunk*> chunkOptimiseQueue;      // The queue of chunks that require mesh optimisation.
    public:
       int vertices;                                // The number of vertices required to draw the world.
       World(int, int, int, int, bool);             // Construct

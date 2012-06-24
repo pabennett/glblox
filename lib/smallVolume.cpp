@@ -167,3 +167,8 @@ void smallVolume::clearModifiedState()
 {
    modified = false;
 }
+
+bool smallVolume::is_full()
+{
+   return volumeData.size() == (size*size*size);
+}
