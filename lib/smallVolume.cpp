@@ -128,6 +128,13 @@ byte smallVolume::get(int x, int y, int z)
 
 void smallVolume::set(int x, int y, int z, byte value)
 {
+   x = x>=size?size-1:x; // clamp
+   x = x<0?0:x;
+   y = y>=size?size-1:y;
+   y = y<0?0:y;
+   z = z>=size?size-1:z;
+   z = z<0?0:z;
+   
    Position key(x,y,z);
    block element;
    if(value > 0)

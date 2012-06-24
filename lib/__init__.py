@@ -77,7 +77,9 @@ WORLD_load = vol_lib.worldLoad
 WORLD_load.argtypes = c_void_p, c_void_p, c_int, c_int, c_int, c_int
 WORLD_deleteBlockAt = vol_lib.worldDeleteBlockAt
 WORLD_deleteBlockAt.argtypes = c_void_p, c_int, c_int, c_int
-        
+WORLD_deleteRegionAt = vol_lib.worldDeleteBlockAt
+WORLD_deleteRegionAt.argtypes = c_void_p, c_int, c_int, c_int, c_int
+       
 class World:
     def __init__(self,dimx,dimy,dimz,chunk_size,fast_meshes):
         vol_lib.initGLEW()
@@ -97,3 +99,5 @@ class World:
         vol_lib.worldLoad(self.obj,c_array_p, x, y, z, chunk_size)
     def deleteBlockAt(self, x, y, z):
         vol_lib.worldDeleteBlockAt(self.obj, x, y, z)
+    def deleteRegionAt(self, x, y, z, radius):
+        vol_lib.worldDeleteRegionAt(self.obj, x, y, z, radius)

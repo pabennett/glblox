@@ -13,6 +13,43 @@
 
 #include "chunk.hpp"
 
+Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z, int chunk_size, int wh) : chunkData(chunk_size)
+{
+   worldHeight = wh;
+   dim.x = chunk_size;
+   dim.y = chunk_size;
+   dim.z = chunk_size;
+   pos.x = chunk_x;
+   pos.y = chunk_y;
+   pos.z = chunk_z;
+   centre.x = pos.x + 0.5 * dim.x;
+   centre.y = pos.y + 0.5 * dim.y;
+   centre.z = pos.z + 0.5 * dim.z;
+   
+   visibleFaceGroups.x = DRAW_BOTH_X;
+   visibleFaceGroups.y = DRAW_BOTH_Y;
+   visibleFaceGroups.z = DRAW_BOTH_Z;
+   
+   std::cout << "CPP: Generating chunk with position " << pos.x << "," << pos.y << "," << pos.z << std::endl;
+   size = chunk_size;
+   modified = false;
+   voxels = 0;
+   // Init VBO
+   glGenBuffers(1, &verticesFrontVBO);
+   glGenBuffers(1, &verticesBackVBO);
+   glGenBuffers(1, &verticesLeftVBO);
+   glGenBuffers(1, &verticesRightVBO);
+   glGenBuffers(1, &verticesAboveVBO);
+   glGenBuffers(1, &verticesBelowVBO);
+   
+   firstDrawCall = true;
+}
+
+Chunk::~Chunk()
+{
+   std::cout << "CPP: Chunk object destroyed." << std::endl;
+}
+
 void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
 {  
 
@@ -115,8 +152,7 @@ void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
 
 void Chunk::buildDisplayList()
 {
-   //std::cout << "CPP: Updating visible groups for chunk: " << pos.x << "," << pos.y << "," << pos.z << "..." << std::endl;
-   //std::cout << "CPP: X = " << visibleFaceGroups.x << " Y = " << visibleFaceGroups.y << " Z = " << visibleFaceGroups.z << std::endl;
+   //
    if(!verticesFront.empty() and (visibleFaceGroups.z == DRAW_FRONT or visibleFaceGroups.z == DRAW_BOTH_Z))
    {
       glBindBuffer(GL_ARRAY_BUFFER, verticesFrontVBO);
@@ -158,8 +194,8 @@ unsigned int Chunk::voxelcount()
 void Chunk::update(bool useFastMeshBuilder)
 {
    // Iterate through the volume and generate a mesh.
-   std::cout << "CPP: Starting mesh builder..." << std::endl;
-   int64 time = GetTimeMs64();
+   //std::cout << "CPP: Starting mesh builder..." << std::endl;
+   //int64 time = GetTimeMs64();
    if(useFastMeshBuilder)
    {
       meshBuilderFast();
@@ -169,7 +205,7 @@ void Chunk::update(bool useFastMeshBuilder)
       meshBuilderSlow();
    }
    buildDisplayList();
-   std::cout << "CPP: Mesh builder done...(" << GetTimeMs64() - time << "ms)" << std::endl;
+   //std::cout << "CPP: Mesh builder done...(" << GetTimeMs64() - time << "ms)" << std::endl;
 
 }
 
@@ -189,13 +225,6 @@ void Chunk::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp, bool useF
    {
       firstDrawCall = false;
       initDraw(program);
-   }
-
-
-   if (modified)
-   {
-      modified = false;
-      update(useFastMeshBuilder);
    }
    
    /* Frustrum Culling */
@@ -271,44 +300,6 @@ void Chunk::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp, bool useF
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glUseProgram(0);
 }
-
-
-Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z, int chunk_size, int wh) : chunkData(chunk_size)
-{
-   worldHeight = wh;
-   dim.x = chunk_size;
-   dim.y = chunk_size;
-   dim.z = chunk_size;
-   pos.x = chunk_x;
-   pos.y = chunk_y;
-   pos.z = chunk_z;
-   centre.x = pos.x + 0.5 * dim.x;
-   centre.y = pos.y + 0.5 * dim.y;
-   centre.z = pos.z + 0.5 * dim.z;
-   
-   visibleFaceGroups.x = DRAW_BOTH_X;
-   visibleFaceGroups.y = DRAW_BOTH_Y;
-   visibleFaceGroups.z = DRAW_BOTH_Z;
-   
-   std::cout << "CPP: Generating chunk with position " << pos.x << "," << pos.y << "," << pos.z << std::endl;
-   size = chunk_size;
-   modified = false;
-   voxels = 0;
-   // Init VBO
-   glGenBuffers(1, &verticesFrontVBO);
-   glGenBuffers(1, &verticesBackVBO);
-   glGenBuffers(1, &verticesLeftVBO);
-   glGenBuffers(1, &verticesRightVBO);
-   glGenBuffers(1, &verticesAboveVBO);
-   glGenBuffers(1, &verticesBelowVBO);
-   
-   firstDrawCall = true;
-}
-
-Chunk::~Chunk()
-{
-   std::cout << "CPP: Chunk object destroyed." << std::endl;
-}
   
 void Chunk::fill()
 {
@@ -320,126 +311,6 @@ void Chunk::empty()
 {
    chunkData.empty();
    modified = true;
-}
-
-void Chunk::pyramid()
-{
-   int x,y,z = 0;
-   chunkData.empty();
-   for (x = 0; x < size; x++)
-   {
-      for (y = 0; y < size; y++)
-      {
-         for (z = 0; z < size; z++)
-         {
-            if (x >= y and x <= size-y and z >= y and z <= size-y)
-            {
-               chunkData.set(x,y,z,1);
-            }
-         }
-      }
-   }
-   modified = true;
-}
-
-// Fill the chunk with random 1's or 0's.
-void Chunk::random()
-{
-   int x,y,z;
-   //int random = rand() % 2; //Random 0 to 1
-   float simplex;
-   chunkData.empty();
-   for (x = 0; x < size; x++)
-   {
-      for (z = 0; z < size; z++)
-      {
-         for (y = 0; y < size; y++)
-         {
-            simplex = glm::simplex(glm::vec3((pos.x + x) / 32.f, (pos.y + y) / 64.f, (pos.z + z) / 32.f)) * 255;
-            simplex = simplex >0.5f?1:0;
-            chunkData.set(x,y,z,int(simplex));
-         }
-      }
-   }
-   modified = true;
-}
-
-void Chunk::floatingRock()
-{
-   float caves, center_falloff, plateau_falloff, density;
-   float xf,yf,zf;
-   int x,y,z;
-   for (x = 0; x < size; x++)
-   {
-      xf=(float)x/(float)size;
-      for (y = 0; y < size; y++)
-      {
-         yf=(float)y/(float)size;
-         for (z = 0; z < size; z++)
-         {
-            zf=(float)z/(float)size;
-            if(yf <= 0.8){
-               plateau_falloff = 1.0;
-            }
-            else if(0.8 < yf && yf < 0.9){
-               plateau_falloff = 1.0-(yf-0.8)*10.0;
-            }
-            else{
-               plateau_falloff = 0.0;
-            }
-
-            center_falloff = 0.1/(
-               pow((xf-0.5)*1.5, 2) +
-               pow((yf-1.0)*0.8, 2) +
-               pow((zf-0.5)*1.5, 2)
-            );
-            
-            caves = pow(simplex_noise(1, xf*5, yf*5, zf*5), 3);
-            density = (
-               simplex_noise(5, xf, yf*0.5, zf) *
-               center_falloff *
-               plateau_falloff
-            );
-            density *= pow(
-               noise((xf+1)*3.0, (yf+1)*3.0, (zf+1)*3.0)+0.4, 1.8
-            );
-            if(caves<0.5){
-               density = 0;
-            }
-            if (density>3.1)
-            {
-               chunkData.set(x,y,z,1);
-            }
-         }
-      }
-   }
-}
-
-// Creates a sphere to fill the entire volume.
-// Existing data is overwritten completely.
-void Chunk::sphere()
-{
-   int radius = size/2;
-   int r_sq = radius * radius;
-   int h = radius;
-   int j = radius;
-   int k = radius;
-   int x,y,z;
-   chunkData.empty();
-   for (x = 0; x < size; x++)
-   {
-      for (y = 0; y < size; y++)
-      {
-         for (z = 0; z < size; z++)
-         {
-            if (((x-h)*(x-h) + (y-j)*(y-j) + (z-k)*(z-k)) < r_sq)
-            {
-               chunkData.set(x,y,z,1);
-            }
-         }
-      }
-   }
-   modified = true;   
 }
 
 void Chunk::load(byte* initialiser, int chunk_size)
@@ -467,26 +338,14 @@ void Chunk::load(byte* initialiser, int chunk_size)
    modified = true;
 }
 
-void Chunk::set(byte initialiser, int x, int y, int z)
+void Chunk::set(int x, int y, int z, byte initialiser)
 {
-   x = x>=dim.x?dim.x-1:x; // clamp
-   x = x<0?0:x;
-   y = y>=dim.y?dim.y-1:y;
-   y = y<0?0:y;
-   z = z>=dim.z?dim.z-1:z;
-   z = z<0?0:z;
    modified = true;
    chunkData.set(x,y,z,initialiser);
 }
 
-int Chunk::get(int x, int y, int z)
+byte Chunk::get(int x, int y, int z)
 {
-   x = x>=dim.x?dim.x-1:x; // clamp
-   x = x<0?0:x;
-   y = y>=dim.y?dim.y-1:y;
-   y = y<0?0:y;
-   z = z>=dim.z?dim.z-1:z;
-   z = z<0?0:z;
    return chunkData.get(x,y,z);
 }
 
@@ -729,8 +588,6 @@ void Chunk::meshBuilderSlow()
 // the voxel volume as a regular grid of cubes.
 void Chunk::meshBuilderFast()
 {
-   std::cout << "CPP: Starting mesh generation loop..." << std::endl;
-   int64 time = GetTimeMs64();
    int x,y,z;              // Chunk x,y,z
    
    bool drawLeft = false;
@@ -786,8 +643,6 @@ void Chunk::meshBuilderFast()
          setPos(x, y, z, FRONT);
       }
    }
-   time = GetTimeMs64() - time;
-   std::cout << "CPP: ...Mesh generation complete: " << time << "ms" <<  std::endl;
 }
 
 void Chunk::addFace(int xmin, int xmax,

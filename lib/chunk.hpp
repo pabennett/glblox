@@ -42,8 +42,7 @@ class Chunk
    glm::vec3 pos;                               // The position of the chunk.
    glm::vec3 centre;                            // The position of the chunk centre.
    int size;                                    // The size of the volume.
-   int worldHeight;                             // The height of the world in voxels.
-   bool modified;                               // Flag to indicate the chunk data has been modified.  
+   int worldHeight;                             // The height of the world in voxels. 
    
    GLuint verticesFrontVBO;                     // Vertex Buffer Object for chunk faces.
    GLuint verticesBackVBO;                      // Vertex Buffer Object for chunk faces.
@@ -62,6 +61,7 @@ class Chunk
    bool firstDrawCall;                          // Flag to enable one-time draw operations.
       
    public:
+      bool modified;                               // Flag to indicate the chunk data has been modified. 
       std::vector<vertex> verticesFront;        // Array holding all triangles on front faces.
       std::vector<vertex> verticesBack;         // Array holding all triangles on back faces.
       std::vector<vertex> verticesLeft;         // Array holding all triangles on left faces.
@@ -74,14 +74,10 @@ class Chunk
       Chunk(int, int, int, int, int);           // Construct
       ~Chunk();                                 // Destruct
       void load(byte*, int);                    // Load external data into the chunk.
-      int get(int, int, int);                   // Get the value of a specific voxel.
-      void set(byte, int, int, int);            // Set the value of a specific voxel.
+      byte get(int, int, int);                  // Get the value of a specific voxel.
+      void set(int, int, int, byte);            // Set the value of a specific voxel.
       void fill();                              // Completely fill the chunk with solid voxels.
-      void empty();                             // Empty the chunk.
-      void random();                            // Fill the chunk with random data.     
-      void floatingRock();                      // Use Florian Boesch's floating rock generator.
-      void sphere();                            // Create a sphere of voxels to fill the chunk.
-      void pyramid();
+      void empty();                             // Empty the chunk.   
       void meshBuilderSlow();                   // Build an optimised mesh.
       void meshBuilderFast();                   // Build an unoptimised mesh.
       void draw(GLuint, glm::vec3, glm::mat4, bool);  // Render the chunk.

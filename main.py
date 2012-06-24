@@ -59,7 +59,7 @@ camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
 
 # Set up the World (glblox Lib)
-chunk_size = 64
+chunk_size = 16
 fast_meshes = True
 
 #Open a heightmap image
@@ -139,10 +139,10 @@ def statusUpdates(dt):
 
 def volumeUpdates(dt):
     position = camera.getPos()
-    world.deleteBlockAt(int(position[0]), int(position[1]), int(position[2]))
-
+    world.deleteRegionAt(int(position[0]), int(position[1]), int(position[2]), 12)
+    
 clock.schedule_interval(statusUpdates, 0.2)
-clock.schedule_interval(volumeUpdates, 0.2)
+clock.schedule_interval_soft(volumeUpdates, 0.2)
 
 # Set up the Mouse handler (pyglet)
 @window.event
