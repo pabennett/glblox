@@ -55,6 +55,7 @@ std::size_t hash_value(const Position &e)
 smallVolume::smallVolume(int sz)
 {
    size = sz;
+   modified = false;
 }
 
 void smallVolume::fill()
@@ -126,6 +127,7 @@ byte smallVolume::get(int x, int y, int z)
    }
 }
 
+// Set the specified voxel to the specified value.
 void smallVolume::set(int x, int y, int z, byte value)
 {
    x = x>=size?size-1:x; // clamp
@@ -141,9 +143,27 @@ void smallVolume::set(int x, int y, int z, byte value)
    {
       element.blockType = value;
       volumeData[key] = element;
+      modified = true;
    }
    else if(is_solid(x,y,z))
    {
       volumeData.erase(key);
+      modified = true;
    }
+}
+
+bool smallVolume::is_empty()
+{
+   return volumeData.empty();
+}
+
+bool smallVolume::is_modified()
+{
+   return modified;
+}
+
+// Clear the modified flag.
+void smallVolume::clearModifiedState()
+{
+   modified = false;
 }

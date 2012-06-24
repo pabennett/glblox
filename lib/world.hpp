@@ -26,4 +26,5 @@ class World
       void load(byte*, int, int, int, int);
    private:
       bool useFastMeshBuilder;                     // Use fast mesh generation.
+      void chunkUpdateQuery();                     // Check all chunks to see which ones need an update.
 };

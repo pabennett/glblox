@@ -65,6 +65,7 @@ void World::load(byte* data, int x, int y, int z, int size)
       std::cout << "CPP: World: Loaded external data into chunk:" 
       << x << "," << y << "," << z << std::endl;
    }
+   World::chunkUpdateQuery(); // Add modified chunks to the update queue.
 }
    
 
@@ -79,17 +80,10 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
       {
          chunkUpdateQueue.back()->update(useFastMeshBuilder);
          chunkUpdateQueue.pop_back();
-         std::cout << "CPP: There are " << chunkUpdateQueue.size() << " chunks awaiting update..." << std::endl;
       }
       // Call draw on all chunks to render them.
       for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
       {
-         // Add all stale chunks to the chunk update queue. (temporary)
-         if (chunks[i]->modified)
-         {
-            chunkUpdateQueue.push_back(chunks[i]);
-            chunks[i]->modified = false;
-         }
          // Render the chunk. Cam is used for culling.
          chunks[i]->draw(program, camPosition, mvp, useFastMeshBuilder);
          // Update the vertex counter.
@@ -120,6 +114,8 @@ void World::deleteBlockAt(int x, int y, int z)
          {
             std::cout << "CPP: Deleting block at " << xvi << "," << yvi << "," << zvi << std::endl;
             chunks[index]->set(xvi, yvi, zvi, 0);
+            // Add this chunk to the update queue.
+            chunkUpdateQueue.push_back(chunks[index]);
          }
       }
    }
@@ -171,6 +167,20 @@ void World::deleteRegionAt(int x, int y, int z, int r)
             }
          }
       }
+      World::chunkUpdateQuery(); // Add modified chunks to the update queue.
+   }
+}
+
+void World::chunkUpdateQuery()
+{
+   for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
+   {
+      // Add all stale chunks to the chunk update queue.
+      if (chunks[i]->is_modified())
+      {
+         chunkUpdateQueue.push_back(chunks[i]);
+         chunks[i]->clearModifiedState();
+      }
    }
 }
 
@@ -206,6 +216,7 @@ void World::fillSpheres()
          }
          std::cout << "CPP: ... fill complete (" << GetTimeMs64() - time << "ms)" << std::endl;
       }
+      World::chunkUpdateQuery(); // Add modified chunks to the update queue.
    }
 }
 
@@ -235,6 +246,7 @@ void World::fillPyramids()
          }
          std::cout << "CPP: ... fill complete (" << GetTimeMs64() - time << "ms)" << std::endl;
       }
+      World::chunkUpdateQuery(); // Add modified chunks to the update queue.
    }
 }
 
@@ -248,6 +260,7 @@ void World::fill()
       {
          chunks[i]->fill();
       }
+      World::chunkUpdateQuery(); // Add modified chunks to the update queue.
    }
 }
 
@@ -282,5 +295,6 @@ void World::random()
             }
          }
       }
+      World::chunkUpdateQuery(); // Add modified chunks to the update queue.
    }
 }

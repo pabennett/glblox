@@ -334,19 +334,30 @@ void Chunk::load(byte* initialiser, int chunk_size)
          }
       }
    }
-
-   modified = true;
+   modified = chunkData.is_modified();
+   chunkData.clearModifiedState();
 }
 
 void Chunk::set(int x, int y, int z, byte initialiser)
 {
-   modified = true;
    chunkData.set(x,y,z,initialiser);
+   modified = chunkData.is_modified() or modified;
+   chunkData.clearModifiedState();
 }
 
 byte Chunk::get(int x, int y, int z)
 {
    return chunkData.get(x,y,z);
+}
+
+void Chunk::clearModifiedState()
+{
+   modified = false;
+}
+
+bool Chunk::is_modified()
+{
+   return modified;
 }
 
 // Generate a triangle mesh which can be used to represent

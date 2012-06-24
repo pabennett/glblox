@@ -17,6 +17,9 @@ class smallVolume
       void set(int, int, int, byte);
       void fill();
       void empty();
+      bool is_empty();
+      bool is_modified();
+      void clearModifiedState();
       bool blockLeftVisible(int, int, int);
       bool blockRightVisible(int, int, int);
       bool blockAboveVisible(int, int, int);
@@ -28,5 +31,6 @@ class smallVolume
       iterator end() { return volumeData.end(); }
    protected:
       int size;
+      bool modified;
       smallVolumeData volumeData;
 };

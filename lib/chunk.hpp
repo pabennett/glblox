@@ -61,7 +61,6 @@ class Chunk
    bool firstDrawCall;                          // Flag to enable one-time draw operations.
       
    public:
-      bool modified;                               // Flag to indicate the chunk data has been modified. 
       std::vector<vertex> verticesFront;        // Array holding all triangles on front faces.
       std::vector<vertex> verticesBack;         // Array holding all triangles on back faces.
       std::vector<vertex> verticesLeft;         // Array holding all triangles on left faces.
@@ -80,6 +79,8 @@ class Chunk
       void empty();                             // Empty the chunk.   
       void meshBuilderSlow();                   // Build an optimised mesh.
       void meshBuilderFast();                   // Build an unoptimised mesh.
+      void clearModifiedState();                // Clear the modified flag.
+      bool is_modified();                       // Test if the chunk has been modified.
       void draw(GLuint, glm::vec3, glm::mat4, bool);  // Render the chunk.
       void update(bool);                            // Update display buffers for the chunk.
       void setVisibleFaceGroup(glm::vec3);      // Move to world class when its created.
@@ -87,6 +88,8 @@ class Chunk
       unsigned int voxelcount();                // Return the number of voxels contained in the chunk.
       void initDraw(GLuint);
    private:
+      bool modified;                               // Flag to indicate the chunk data has been modified. 
+
       void setPos(int, int, int, facePos); // Specific to the positions array.
       void addFace(int, int, int, int, int, int,
                    facePos, byte);              // Add a face to the vertex list.
