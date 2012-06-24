@@ -120,9 +120,9 @@ extern "C" {
       world->deleteBlockAt(x, y, z);
    }
    
-   void worldDeleteRegionAt(World* world, int x, int y, int z, int radius)
+   void worldModifyRegionAt(World* world, int x, int y, int z, byte val, int radius)
    {
-      world->deleteRegionAt(x, y, z, radius);
+      world->modifyRegionAt(x, y, z, val, radius);
    }
    
    int worldNumVertices(World* world)

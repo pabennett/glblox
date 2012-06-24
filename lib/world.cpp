@@ -125,7 +125,7 @@ void World::deleteBlockAt(int x, int y, int z)
    with the specified radius. 
    Operates across multiple chunks if necessary.*/
 
-void World::deleteRegionAt(int x, int y, int z, int r)
+void World::modifyRegionAt(int x, int y, int z, byte val, int r)
 {
    int xvi, yvi, zvi; // Voxel coords (within chunk)
    int xi, yi, zi;    // Voxel coords (within world)
@@ -162,7 +162,7 @@ void World::deleteRegionAt(int x, int y, int z, int r)
                   yvi = yi % chunk_size;
                   zvi = zi % chunk_size;  
                   // Delete xi,yi,zi
-                  chunks[chunk_index]->set(xvi,yvi,zvi,0);
+                  chunks[chunk_index]->set(xvi,yvi,zvi,val);
                }
             }
          }

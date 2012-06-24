@@ -21,7 +21,7 @@ class World
       void fill();                                 // Fill the world.
       void random();                               // Randomly generated world.
       void deleteBlockAt(int, int, int);           // Delete the voxel at the specified world coord.
-      void deleteRegionAt(int, int, int, int);     // Delete a spherical region of voxels at the
+      void modifyRegionAt(int, int, int, byte, int);// Delete a spherical region of voxels at the
                                                    // specified world coord with the specified radius.
       void load(byte*, int, int, int, int);
    private:

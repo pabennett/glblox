@@ -109,7 +109,7 @@ print "Loading World data into chunks..."
 for (x,y,z),chunk in datablocks.items():
     print "Loading chunk: " + str(x) + "," + str(y) + "," + str(z)
     world.load(chunk, x, y, z, chunk_size)
-          
+               
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)
@@ -125,9 +125,9 @@ def update(dt):
     elif keys[key.D]:
         camera.move(m,0,0)
         
-
     if keys[key.T]:
-        world.fillSpheres()    
+        world.fillSpheres()   
+        
 clock.schedule(update)         
 
 
@@ -139,8 +139,12 @@ def statusUpdates(dt):
 
 def volumeUpdates(dt):
     position = camera.getPos()
-    world.deleteRegionAt(int(position[0]), int(position[1]), int(position[2]), 12)
     
+    if keys[key.SPACE]:
+        world.modifyRegionAt(int(position[0]), int(position[1]), int(position[2]), 1, 12)
+    else:
+        world.modifyRegionAt(int(position[0]), int(position[1]), int(position[2]), 0, 12)
+
 clock.schedule_interval(statusUpdates, 0.2)
 clock.schedule_interval_soft(volumeUpdates, 0.2)
 
