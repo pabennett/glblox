@@ -141,7 +141,7 @@ def volumeUpdates(dt):
     position = camera.getPos()
     
     if keys[key.SPACE]:
-        world.modifyRegionAt(int(position[0]), int(position[1]), int(position[2]), 1, 12)
+        world.modifyRegionAt(int(position[0]), int(position[1]), int(position[2]), 1, 4)
     else:
         world.modifyRegionAt(int(position[0]), int(position[1]), int(position[2]), 0, 12)
 
