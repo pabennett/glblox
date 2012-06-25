@@ -59,11 +59,11 @@ camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
 
 # Set up the World (glblox Lib)
-chunk_size = 16
+chunk_size = 32
 fast_meshes = True
 
 #Open a heightmap image
-im = Image.open('savelevels/world.png')
+im = Image.open('savelevels/world.gif')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -108,8 +108,7 @@ for tile_x in xrange(0,im_width/chunk_size):
 print "Loading World data into chunks..."
 for (x,y,z),chunk in datablocks.items():
     print "Loading chunk: " + str(x) + "," + str(y) + "," + str(z)
-    world.load(chunk, x, y, z, chunk_size)
-         
+    world.load(chunk, x, y, z, chunk_size)       
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)

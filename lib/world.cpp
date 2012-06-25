@@ -79,25 +79,31 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
       if(chunkUpdateQueue.size() != 0)
       {
          chunkUpdateQueue.back()->update(true);
-         if(not useFastMeshBuilder)
+         // if(not useFastMeshBuilder)
+         // {
+            // // Add this chunk to the mesh optimiser queue.
+            // chunkOptimiseQueue.push_back(chunkUpdateQueue.back());
+         // }
+         if(!chunkUpdateQueue.back()->meshBuildRunning())
          {
-            // Add this chunk to the mesh optimiser queue.
-            chunkOptimiseQueue.push_back(chunkUpdateQueue.back());
+            // If the mesh for this chunk was sucessfully rebuilt remove it from
+            // the queue.
+            chunkUpdateQueue.pop_back();
+            std::cout << "CPP: Chunks awaiting update: " << chunkUpdateQueue.size() << std::endl;
          }
-         chunkUpdateQueue.pop_back();
       }
-      else if (chunkOptimiseQueue.size() != 0)
-      {
-         // If we're done updating chunks with a fast mesh start optimsing meshes.
-         chunkOptimiseQueue.back()->update(false);
-         chunkOptimiseQueue.pop_back();
-      }
+      // else if (chunkOptimiseQueue.size() != 0)
+      // {
+         // // If we're done updating chunks with a fast mesh start optimsing meshes.
+         // chunkOptimiseQueue.back()->update(false);
+         // chunkOptimiseQueue.pop_back();
+      // }
       
       // Call draw on all chunks to render them.
       for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
       {
          // Render the chunk. Cam is used for culling.
-         chunks[i]->draw(program, camPosition, mvp, true);
+         chunks[i]->draw(program, camPosition, mvp);
          // Update the vertex counter.
          vertices += chunks[i]->verticesRenderedCount;
       }
@@ -127,7 +133,7 @@ void World::deleteBlockAt(int x, int y, int z)
             std::cout << "CPP: Deleting block at " << xvi << "," << yvi << "," << zvi << std::endl;
             chunks[index]->set(xvi, yvi, zvi, 0);
             // Add this chunk to the update queue.
-            chunkUpdateQueue.push_back(chunks[index]);
+            World::chunkUpdateQuery();
          }
       }
    }
@@ -188,10 +194,10 @@ void World::chunkUpdateQuery()
    for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
    {
       // Add all stale chunks to the chunk update queue.
-      if (chunks[i]->is_modified())
+      if (chunks[i]->requireMeshUpdate())
       {
+         chunks[i]->initialiseMeshBuilder();
          chunkUpdateQueue.push_back(chunks[i]);
-         chunks[i]->clearModifiedState();
       }
    }
 }
