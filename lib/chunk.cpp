@@ -33,6 +33,7 @@ Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z, int chunk_size, int wh) : ch
    std::cout << "CPP: Generating chunk with position " << pos.x << "," << pos.y << "," << pos.z << std::endl;
    size = chunk_size;
    modified = false;
+   visible = false;
    voxels = 0;
    // Init VBO
    glGenBuffers(1, &verticesFrontVBO);
@@ -196,15 +197,22 @@ void Chunk::update(bool useFastMeshBuilder)
    // Iterate through the volume and generate a mesh.
    //std::cout << "CPP: Starting mesh builder..." << std::endl;
    //int64 time = GetTimeMs64();
-   if(useFastMeshBuilder)
+   if(!visible)
    {
-      meshBuilderFast();
+      return;
    }
    else
    {
-      meshBuilderSlow();
+      if(useFastMeshBuilder)
+      {
+         meshBuilderFast();
+      }
+      else
+      {
+         meshBuilderSlow();
+      }
+      buildDisplayList();
    }
-   buildDisplayList();
    //std::cout << "CPP: Mesh builder done...(" << GetTimeMs64() - time << "ms)" << std::endl;
 
 }
@@ -221,6 +229,10 @@ void Chunk::initDraw(GLuint program)
 
 void Chunk::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp, bool useFastMeshBuilder)
 {
+   if(!visible)
+   {
+      return;
+   }
    if(firstDrawCall)
    {
       firstDrawCall = false;
@@ -305,12 +317,14 @@ void Chunk::fill()
 {
    chunkData.fill();
    modified = true;
+   visible = true;
 }
 
 void Chunk::empty()
 {
    chunkData.empty();
    modified = true;
+   visible = false;
 }
 
 void Chunk::load(byte* initialiser, int chunk_size)
@@ -335,6 +349,7 @@ void Chunk::load(byte* initialiser, int chunk_size)
       }
    }
    modified = chunkData.is_modified();
+   visible = !chunkData.is_empty();
    chunkData.clearModifiedState();
 }
 
@@ -342,6 +357,7 @@ void Chunk::set(int x, int y, int z, byte initialiser)
 {
    chunkData.set(x,y,z,initialiser);
    modified = chunkData.is_modified() or modified;
+   visible = !chunkData.is_empty();
    chunkData.clearModifiedState();
 }
 

@@ -89,6 +89,7 @@ class Chunk
       void initDraw(GLuint);
    private:
       bool modified;                               // Flag to indicate the chunk data has been modified. 
+      bool visible;                             // Flag to indicate if the chunk is visible.
 
       void setPos(int, int, int, facePos, int); // Specific to the positions array.
       void addFace(int, int, int, int, int, int,
