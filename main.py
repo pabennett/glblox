@@ -28,6 +28,8 @@ import Image
 import numpy as np
 from ctypes import c_byte
 
+import console
+
 
 program = ShaderProgram.open('shaders/main.shader')
 
@@ -35,10 +37,21 @@ program = ShaderProgram.open('shaders/main.shader')
 config = Config(buffers=2, samples=4)
 window = pyglet.window.Window(caption='GlBlox', width=1152, height=864, config=config, vsync=False)
 window.set_exclusive_mouse(True)
-# Misc Setup
-console_font = font.load('DejaVu Sans Mono', 14, bold=False, italic=False)
+
+console_font = font.load('Consolas', 14, bold=False, italic=False)
 fps = pyglet.clock.ClockDisplay(color=(1,1,1,1),
-                                font=console_font)                                                    
+                                font=console_font)  
+
+consoleObj = console.StatusConsole(x=window.width * 0.005, 
+                             y=window.height * 0.98,
+                             width=window.width)
+ 
+consoleObj.addParameter('World Size')   
+consoleObj.addParameter('Chunk Size') 
+consoleObj.addParameter('Total Cubes')                  
+consoleObj.addParameter('Vertices')
+consoleObj.addParameter('Position')
+                                                
 renderingLabel = pyglet.text.Label("Tempstring", 
                           font_name='DejaVu Sans Mono',
                           font_size=14, 
@@ -63,7 +76,7 @@ chunk_size = 32
 fast_meshes = True
 
 #Open a heightmap image
-im = Image.open('savelevels/world.gif')
+im = Image.open('savelevels/world.png')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -110,6 +123,9 @@ for (x,y,z),chunk in datablocks.items():
     print "Loading chunk: " + str(x) + "," + str(y) + "," + str(z)
     world.load(chunk, x, y, z, chunk_size)   
 
+consoleObj.setParameter('World Size', (wx, wy, wz))  
+consoleObj.setParameter('Chunk Size', chunk_size) 
+consoleObj.setParameter('Total Cubes', wx * wy * wz * chunk_size)
 world.setViewDistance(400)
 
 # Set up the Keyboard handler (pyglet)
@@ -134,18 +150,16 @@ clock.schedule(update)
 
 
 def statusUpdates(dt):
-    position = camera.getPos()
-    renderingLabel.text = ("Vertices: {:,d}".format(world.numVertices()))
-    positionLabel.text = ("Position: x: {0[0]};  y: {0[1]}; z: {0[2]}".format(position))
-
+    position = tuple(int(a) for a in camera.getPos())
+    consoleObj.setParameter('Vertices', world.numVertices())
+    consoleObj.setParameter('Position', position)
 
 def volumeUpdates(dt):
-    position = camera.getPos()
-    
+    position = tuple(int(a) for a in camera.getPos())
     if keys[key.SPACE]:
-        world.modifyRegionAt(int(position[0]), int(position[1]), int(position[2]), 1, 4)
+        world.modifyRegionAt(position[0], position[1], position[2], 1, 4)
     else:
-        world.modifyRegionAt(int(position[0]), int(position[1]), int(position[2]), 0, 12)
+        world.modifyRegionAt(position[0], position[1], position[2], 0, 12)
 
 clock.schedule_interval(statusUpdates, 0.2)
 clock.schedule_interval_soft(volumeUpdates, 0.2)
@@ -169,8 +183,9 @@ def on_draw():
     # Draw World   
     world.draw(program.id, camera)
     # Show vertex count
-    renderingLabel.draw()   
-    positionLabel.draw()
+    #renderingLabel.draw()   
+    #positionLabel.draw()
+    consoleObj.draw()
     # Show FPS       
     fps.draw()
 
