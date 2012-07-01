@@ -76,7 +76,7 @@ chunk_size = 32
 fast_meshes = True
 
 #Open a heightmap image
-im = Image.open('savelevels/world.png')
+im = Image.open('savelevels/world.gif')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -195,7 +195,7 @@ def on_draw():
 if __name__ == '__main__':
     print "Program launching..."
     glClearColor(0.05, 0.10, 0.15, 1.0); #Night
-    glClearColor(0.95, 0.95, 0.95, 1.0); #day
+    #glClearColor(0.95, 0.95, 0.95, 1.0); #day
     glEnable(GL_CULL_FACE)
     glEnable(GL_DEPTH_TEST)
     glCullFace(GL_BACK)

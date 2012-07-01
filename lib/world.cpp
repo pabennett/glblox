@@ -30,6 +30,7 @@ World::World(int dimx, int dimy, int dimz, int size, bool useFastMeshBuilder)
    worldCentre = glm::vec3(int(dim.x/2), int(dim.y/2), int(dim.z/2));
    useFastMeshBuilder = useFastMeshBuilder;
    vector3i pos;
+   vector3i key;
    int x,y,z;
    
    // Build a world of chunks.
@@ -40,11 +41,14 @@ World::World(int dimx, int dimy, int dimz, int size, bool useFastMeshBuilder)
       {
          for (x = 0; x < dim.x; x++)
          {
+            key.x = x;
+            key.y = y;
+            key.z = z;
             pos.x = x * chunk_size;
             pos.y = y * chunk_size;
             pos.z = z * chunk_size;
             std::cout << "CPP: World: Generating chunk:" << pos.x << "," << pos.y << "," << pos.z << std::endl;
-            chunks.push_back(new Chunk(pos.x, pos.y, pos.z, chunk_size, dim.y * chunk_size));
+            chunks[key] = new Chunk(pos.x, pos.y, pos.z, chunk_size, dim.y * chunk_size);
          }
       }
    }
@@ -55,16 +59,38 @@ World::~World()
    chunks.clear();
 }
 
+// Test to see if the chunk at x,y,z (chunk coords) exists.
+bool World::exists(int x, int y, int z)
+{
+   vector3i key;
+   key.x = x;
+   key.y = y;
+   key.z = z;
+   return not (chunks.find(key) == chunks.end());
+}
+
+bool World::exists(vector3i key)
+{
+   return not (chunks.find(key) == chunks.end());
+}
+
 void World::load(byte* data, int x, int y, int z, int size)
 {
    // Load the 3D array into the given chunk.
-   int index = x + y * dim.x + z * dim.x * dim.y;
-   if(!chunks.empty() and chunks.size() >= index)
+   vector3i key;
+   key.x = x;
+   key.y = y;
+   key.z = z;
+   if(exists(key))
    {
       // Load external data into the chunk.
-      chunks[index]->load(data, size); 
+      chunks[key]->load(data, size); 
       std::cout << "CPP: World: Loaded external data into chunk:" 
       << x << "," << y << "," << z << std::endl;
+   }
+   else
+   {
+      std::cout << "CPP: Couldnt load this chunk" << std::endl;
    }
    World::chunkUpdateQuery(); // Add modified chunks to the update queue.
 }
@@ -94,12 +120,12 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
       }
 
       // Call draw on all chunks to render them.
-      for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
+      for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
          // Render the chunk. Cam is used for culling.
-         chunks[i]->draw(program, camPosition, mvp, worldViewDistance);
+         (*i).second->draw(program, camPosition, mvp, worldViewDistance);
          // Update the vertex counter.
-         vertices += chunks[i]->verticesRenderedCount;
+         vertices += (*i).second->verticesRenderedCount;
       }
    }
 }
@@ -129,9 +155,9 @@ void World::camPositionCheck()
       if(xdel != 0 or ydel != 0 or zdel != 0)
       {
          // Move all chunks on the lower limits to upper x + 1
-         for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
+         for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
          {
-            chunkPosition = chunks[i]->position();
+            chunkPosition = (*i).second->position();
             if(xdel > 0 and chunkPosition.x == worldBoundMin.x * chunk_size)
             {
                chunkPosition.x = (worldBoundMax.x) * chunk_size;
@@ -156,9 +182,9 @@ void World::camPositionCheck()
             {
                chunkPosition.z = (worldBoundMin.z) * chunk_size;
             }
-            chunks[i]->setChunkPosition(  chunkPosition.x, 
-                                          chunkPosition.y, 
-                                          chunkPosition.z);
+            (*i).second->setChunkPosition( chunkPosition.x, 
+                                    chunkPosition.y, 
+                                    chunkPosition.z);
          }
          // Mark all chunks on lower x limit + 1 as new lower x.
          worldCentre = camChunkPos;
@@ -177,12 +203,15 @@ void World::deleteBlockAt(int x, int y, int z)
    xvi = x % chunk_size;
    yvi = y % chunk_size;
    zvi = z % chunk_size;
-   int index = xi + yi * dim.x + zi * dim.x * dim.y; // Index of chunk
+   vector3i index;
+   index.x = x;
+   index.y = y;
+   index.z = z;
    // Get the index of the chunk encapsulating the given x,y,z coord.
    if (x >= 0 and xi < dim.x and y >= 0 and yi < dim.y and z >= 0 and zi < dim.z)
    {
       // Delete the voxel of the given coord in this chunk.
-      if(!chunks.empty() and chunks.size() >= index)
+      if(!chunks.empty())
       {
          std::cout << "CPP: Testing block at " << xvi << "," << yvi << "," << zvi << std::endl;
          if(chunks[index]->get(xvi, yvi, zvi)>0)
@@ -198,16 +227,28 @@ void World::deleteBlockAt(int x, int y, int z)
 
 /* Delete a spherical region of voxels about the world x,y,z co-ordinates
    with the specified radius. 
-   Operates across multiple chunks if necessary.*/
+   Operates across multiple chunks if necessary
+   The input co-ordinates are true voxel x,y,z co-ordinates, we must find out
+   which chunk currently holds the voxels at this co-ordinate and operate on
+   that chunk only. */
 
 void World::modifyRegionAt(int x, int y, int z, byte val, int r)
 {
    int xvi, yvi, zvi; // Voxel coords (within chunk)
    int xi, yi, zi;    // Voxel coords (within world)
-   int chunk_index;
+   vector3i chunk_index;
    
    int r_sq = r * r;
-
+   
+   // Convert from world x,y,z into 'render-zone' x,y,z.
+   x = x % (dim.x * chunk_size);
+   y = y % (dim.y * chunk_size);
+   z = z % (dim.z * chunk_size);
+   
+   x = x>=0?x:(dim.x * chunk_size)+x;
+   y = y>=0?y:(dim.y * chunk_size)+y;
+   z = z>=0?z:(dim.z * chunk_size)+z;
+   
    int x_start = x - r >= 0 ? x - r : 0;
    int y_start = y - r >= 0 ? y - r : 0;
    int z_start = z - r >= 0 ? z - r : 0;
@@ -228,16 +269,19 @@ void World::modifyRegionAt(int x, int y, int z, byte val, int r)
                if (((xi-x)*(xi-x) + (yi-y)*(yi-y) + (zi-z)*(zi-z)) < r_sq)
                {
                   // Determine the index of the chunk holding xi,yi,zi
-                  chunk_index =  (xi / chunk_size) + 
-                                 (yi / chunk_size) * dim.x +
-                                 (zi / chunk_size) * dim.x * dim.y;
+                  chunk_index.x = (xi / chunk_size); 
+                  chunk_index.y = (yi / chunk_size);
+                  chunk_index.z = (zi / chunk_size);
                     
                   // Determine the voxel coords (chunk space) of xi,yi,zi
                   xvi = xi % chunk_size;
                   yvi = yi % chunk_size;
                   zvi = zi % chunk_size;  
                   // Delete xi,yi,zi
-                  chunks[chunk_index]->set(xvi,yvi,zvi,val);
+                  if(exists(chunk_index))
+                  {
+                     chunks[chunk_index]->set(xvi,yvi,zvi,val);
+                  }
                }
             }
          }
@@ -248,13 +292,13 @@ void World::modifyRegionAt(int x, int y, int z, byte val, int r)
 
 void World::chunkUpdateQuery()
 {
-   for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
+   for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
    {
       // Add all stale chunks to the chunk update queue.
-      if (chunks[i]->requireMeshUpdate())
+      if ((*i).second->requireMeshUpdate())
       {
-         chunks[i]->initialiseMeshBuilder();
-         chunkUpdateQueue.push_back(chunks[i]);
+         (*i).second->initialiseMeshBuilder();
+         chunkUpdateQueue.push_back((*i).second);
       }
    }
 }
@@ -268,14 +312,15 @@ void World::fillSpheres()
    int j = radius;
    int k = radius;
    int x,y,z;
+   vector3i key;
    
    if(!chunks.empty())
    {
-      for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
+      for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
          std::cout << "CPP: Filling chunk with sphere data..." << std::endl;
          int64 time = GetTimeMs64();
-         chunks[i]->empty();
+         (*i).second->empty();
          for (x = 0; x < chunk_size; x++)
          {
             for (y = 0; y < chunk_size; y++)
@@ -284,7 +329,10 @@ void World::fillSpheres()
                {
                   if (((x-h)*(x-h) + (y-j)*(y-j) + (z-k)*(z-k)) < r_sq)
                   {
-                     chunks[i]->set(x,y,z,1);
+                     key.x = x;
+                     key.y = y;
+                     key.z = z;
+                     (*i).second->set(x,y,z,1);
                   }
                }
             }
@@ -301,11 +349,11 @@ void World::fillPyramids()
    int x,y,z = 0;
    if(!chunks.empty())
    {
-      for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
+      for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
          std::cout << "CPP: Filling chunk with pyramid data..." << std::endl;
          int64 time = GetTimeMs64();
-         chunks[i]->empty();
+         (*i).second->empty();
          for (x = 0; x < chunk_size; x++)
          {
             for (y = 0; y < chunk_size; y++)
@@ -314,7 +362,7 @@ void World::fillPyramids()
                {
                   if (x >= y and x <= chunk_size-y and z >= y and z <= chunk_size-y)
                   {
-                     chunks[i]->set(x,y,z,1);
+                     (*i).second->set(x,y,z,1);
                   }
                }
             }
@@ -331,9 +379,9 @@ void World::fill()
    int x,y,z;
    if(!chunks.empty())
    {
-      for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
+      for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
-         chunks[i]->fill();
+         (*i).second->fill();
       }
       World::chunkUpdateQuery(); // Add modified chunks to the update queue.
    }
@@ -355,13 +403,14 @@ void World::random()
    if(!chunks.empty())
    {
       std::cout << "CPP: Randomising chunks using simplex noise function..." << std::endl;
-      for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
+      for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
-         cz = (i / size_sq) * chunk_size;
-         cy = ((i % size_sq) / dim.x) * chunk_size;
-         cx = (i % dim.x) * chunk_size;
+         cz = (*i).first.z;
+         cy = (*i).first.y;
+         cx = (*i).first.x;
+                  
          
-         chunks[i]->empty();
+         (*i).second->empty();
          for (x = 0; x < chunk_size; x++)
          {
             for (z = 0; z < chunk_size; z++)
@@ -370,7 +419,7 @@ void World::random()
                {
                   simplex = glm::simplex(glm::vec3((cx+x) / 32.f, (cy+y) / 64.f, (cz+z) / 32.f)) * 255;
                   simplex = simplex >0.5f?1:0;
-                  chunks[i]->set(x,y,z,int(simplex));
+                  (*i).second->set(x,y,z,int(simplex));
                }
             }
          }

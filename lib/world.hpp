@@ -4,12 +4,15 @@
 #include "chunk.cpp"    // Defines a chunk class which acts as a voxel container
                         // and provides utility functions for accessing or 
                         // modifying the data as well as rendering the data. 
+                        
+
            
 class World
 {
+      std::map<vector3i,Chunk*> chunks;
       vector3i dim;                                // The dimensions of the world in chunks.
       int chunk_size;                              // The dimension of the world chunks.
-      std::vector<Chunk*> chunks;                  // Array of chunks representing the world.
+      std::vector<Chunk*> chunks2;                 // Array of chunks representing the world.
       std::vector<Chunk*> chunkUpdateQueue;        // Chunks that require a mesh update.
       std::vector<Chunk*> chunkOptimiseQueue;      // The queue of chunks that require mesh optimisation.
    public:
@@ -21,6 +24,8 @@ class World
       void fillPyramids();                         // Fill the world with pyramids.
       void fill();                                 // Fill the world.
       void random();                               // Randomly generated world.
+      bool exists(int, int, int);                  // Test to see if the chunk at the chunk x,y,z coords exists.
+      bool exists(vector3i);
       void deleteBlockAt(int, int, int);           // Delete the voxel at the specified world coord.
       void modifyRegionAt(int, int, int, byte, int);// Delete a spherical region of voxels at the
                                                    // specified world coord with the specified radius.
