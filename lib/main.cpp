@@ -115,6 +115,11 @@ extern "C" {
       world->random();
    }
    
+   void worldSetViewDistance(World* world, int distance)
+   {
+      world->setViewDistance(distance);
+   }
+      
    void worldDeleteBlockAt(World* world, int x, int y, int z)
    {
       world->deleteBlockAt(x, y, z);

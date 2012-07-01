@@ -79,11 +79,6 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
       if(chunkUpdateQueue.size() != 0)
       {
          chunkUpdateQueue.back()->update(true);
-         // if(not useFastMeshBuilder)
-         // {
-            // // Add this chunk to the mesh optimiser queue.
-            // chunkOptimiseQueue.push_back(chunkUpdateQueue.back());
-         // }
          if(!chunkUpdateQueue.back()->meshBuildRunning())
          {
             // If the mesh for this chunk was sucessfully rebuilt remove it from
@@ -92,18 +87,12 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
             std::cout << "CPP: Chunks awaiting update: " << chunkUpdateQueue.size() << std::endl;
          }
       }
-      // else if (chunkOptimiseQueue.size() != 0)
-      // {
-         // // If we're done updating chunks with a fast mesh start optimsing meshes.
-         // chunkOptimiseQueue.back()->update(false);
-         // chunkOptimiseQueue.pop_back();
-      // }
       
       // Call draw on all chunks to render them.
       for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
       {
          // Render the chunk. Cam is used for culling.
-         chunks[i]->draw(program, camPosition, mvp);
+         chunks[i]->draw(program, camPosition, mvp, worldViewDistance);
          // Update the vertex counter.
          vertices += chunks[i]->verticesRenderedCount;
       }
@@ -280,6 +269,11 @@ void World::fill()
       }
       World::chunkUpdateQuery(); // Add modified chunks to the update queue.
    }
+}
+
+void World::setViewDistance(int distance)
+{
+   worldViewDistance = distance;
 }
 
 void World::random()

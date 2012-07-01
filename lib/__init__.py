@@ -79,6 +79,8 @@ WORLD_deleteBlockAt = vol_lib.worldDeleteBlockAt
 WORLD_deleteBlockAt.argtypes = c_void_p, c_int, c_int, c_int
 WORLD_worldModifyRegionAt = vol_lib.worldModifyRegionAt
 WORLD_worldModifyRegionAt.argtypes = c_void_p, c_int, c_int, c_int, c_byte, c_int
+WORLD_worldSetViewDistance = vol_lib.worldSetViewDistance
+WORLD_worldSetViewDistance.argtypes = c_void_p, c_int
        
 class World:
     def __init__(self,dimx,dimy,dimz,chunk_size,fast_meshes):
@@ -101,3 +103,5 @@ class World:
         vol_lib.worldDeleteBlockAt(self.obj, x, y, z)
     def modifyRegionAt(self, x, y, z, val, radius):
         vol_lib.worldModifyRegionAt(self.obj, x, y, z, val, radius)
+    def setViewDistance(self, distance):
+        vol_lib.worldSetViewDistance(self.obj, distance)

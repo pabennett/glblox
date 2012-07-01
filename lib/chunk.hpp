@@ -90,7 +90,7 @@ class Chunk
       bool requireMeshUpdate();              // Test if the chunk mesh is out of date.
       bool meshBuildRunning();               // Test if the mesh builder is running.
       // Render the chunk.
-      void draw(GLuint, glm::vec3, glm::mat4);  
+      void draw(GLuint, glm::vec3, glm::mat4, int);  
       void update(bool);                     // Update display buffers for the chunk.
       void setVisibleFaceGroup(glm::vec3);   // Move to world class when its created.
       void buildDisplayList();               // Build the display list vector.

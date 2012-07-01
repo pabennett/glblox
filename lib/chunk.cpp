@@ -237,12 +237,17 @@ void Chunk::initDraw(GLuint program)
 	glUseProgram(0);
 }
 
-void Chunk::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
+void Chunk::draw(GLuint program, 
+                 glm::vec3 camPosition, 
+                 glm::mat4 mvp, 
+                 int viewDistance)
 {
+   // If there is nothing to draw then abort early.
    if(!visible)
    {
       return;
    }
+   // Set up the vertex buffers if this is the first draw call.
    if(firstDrawCall)
    {
       firstDrawCall = false;
@@ -251,16 +256,32 @@ void Chunk::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
    
    /* Frustrum Culling */
    // http://en.wikibooks.org/wiki/OpenGL_Programming/Glescraft_5
+   
+   // Determine the clip space coords of the chunk centre.
    glm::vec4 coords = mvp * glm::vec4(centre, 1);
    coords.x /= coords.w;
    coords.y /= coords.w;
-   float diameter = sqrtf(centre.x*centre.x + centre.y*centre.y + centre.z*centre.z);
    
+   // Diameter of bounding sphere holding the chunk.
+   float diameter = sqrtf(centre.x*centre.x + centre.y*centre.y + centre.z*centre.z);
+   // How far away the chunk is from the camera.
+   float distance = glm::length(coords);
+   
+   // If the chunk has a negative Z in clip space then it is behind the camera.
    if(coords.z < -diameter)
    {
       verticesRenderedCount = 0;
       return;
    }
+   
+   // If the chunk is out of the viewing distance dont draw it.
+   if(distance > viewDistance)
+   {
+      verticesRenderedCount = 0;
+      return;
+   }
+   
+   // If the chunk is outside the view frustrum plus a tolerance then dont draw.
    diameter /= fabsf(coords.w);   
    if(fabsf(coords.x) > 1 + diameter or fabsf(coords.y > 1 + diameter))
    {
@@ -668,11 +689,12 @@ void Chunk::meshBuilderFast()
    // The chunk is not full, build the mesh normally.  
    // Loop through every voxel in the volume and create the vertices required
    // to render exposed faces. Faces hidden by surrounding cubes are not drawn.
-   // for(boost::unordered_map<Position, block>::iterator ii=chunkData.begin(); ii!=chunkData.end(); ++ii)
    
+   // The mesh builder is only allowed to perform a certain amount of work
+   // before it terminates and must be called again. This helps keep the frame
+   // rate fluid but it does add latency to mesh updates.
    for(int i = 0; i < 4096; i++)
    {    
-      //
       if(ii==chunkData.end())
       {
          // Mesh generation complete.

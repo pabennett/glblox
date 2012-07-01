@@ -108,7 +108,10 @@ for tile_x in xrange(0,im_width/chunk_size):
 print "Loading World data into chunks..."
 for (x,y,z),chunk in datablocks.items():
     print "Loading chunk: " + str(x) + "," + str(y) + "," + str(z)
-    world.load(chunk, x, y, z, chunk_size)       
+    world.load(chunk, x, y, z, chunk_size)   
+
+world.setViewDistance(400)
+
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)

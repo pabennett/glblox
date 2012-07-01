@@ -25,7 +25,9 @@ class World
       void modifyRegionAt(int, int, int, byte, int);// Delete a spherical region of voxels at the
                                                    // specified world coord with the specified radius.
       void load(byte*, int, int, int, int);
+      void setViewDistance(int);                   // Set the viewing distance.
    private:
       bool useFastMeshBuilder;                     // Use fast mesh generation.
       void chunkUpdateQuery();                     // Check all chunks to see which ones need an update.
+      int worldViewDistance;                       // How far you can see measured in voxels.
 };
