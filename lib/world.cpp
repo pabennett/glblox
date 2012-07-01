@@ -27,7 +27,8 @@ World::World(int dimx, int dimy, int dimz, int size, bool useFastMeshBuilder)
    dim.x = dimx;
    dim.y = dimy;
    dim.z = dimz;
-   World::useFastMeshBuilder = useFastMeshBuilder;
+   worldCentre = glm::vec3(int(dim.x/2), int(dim.y/2), int(dim.z/2));
+   useFastMeshBuilder = useFastMeshBuilder;
    vector3i pos;
    int x,y,z;
    
@@ -68,13 +69,17 @@ void World::load(byte* data, int x, int y, int z, int size)
    World::chunkUpdateQuery(); // Add modified chunks to the update queue.
 }
    
-
+// The main draw loop call
 void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
 {
    int x,y,z;
    vertices = 0;
+   lastCamPosition = camPosition;
+   
    if(!chunks.empty())
    {
+      camPositionCheck();
+      
       // Pull one chunk from the update queue and update its mesh.
       if(chunkUpdateQueue.size() != 0)
       {
@@ -87,7 +92,7 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
             std::cout << "CPP: Chunks awaiting update: " << chunkUpdateQueue.size() << std::endl;
          }
       }
-      
+
       // Call draw on all chunks to render them.
       for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
       {
@@ -99,6 +104,69 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
    }
 }
 
+void World::camPositionCheck()
+{
+   glm::vec3 camChunkPos;
+   camChunkPos.x = int(lastCamPosition.x / chunk_size);
+   camChunkPos.y = int(lastCamPosition.y / chunk_size);
+   camChunkPos.z = int(lastCamPosition.z / chunk_size);
+   glm::vec3 chunkPosition;
+   glm::vec3 worldBoundMax;
+   glm::vec3 worldBoundMin;
+   int xdel, ydel, zdel;
+   worldBoundMin = glm::vec3(worldCentre.x-(dim.x/2),
+                             worldCentre.y-(dim.y/2),
+                             worldCentre.z-(dim.z/2));
+   worldBoundMax = glm::vec3(worldCentre.x+(dim.x/2),
+                             worldCentre.y+(dim.y/2),
+                             worldCentre.z+(dim.z/2));
+   
+   if(worldCentre != camChunkPos)
+   {
+      xdel = camChunkPos.x - worldCentre.x;
+      ydel = camChunkPos.y - worldCentre.y;
+      zdel = camChunkPos.z - worldCentre.z;
+      if(xdel != 0 or ydel != 0 or zdel != 0)
+      {
+         // Move all chunks on the lower limits to upper x + 1
+         for(std::vector<Chunk*>::size_type i = 0; i != chunks.size(); i++)
+         {
+            chunkPosition = chunks[i]->position();
+            if(xdel > 0 and chunkPosition.x == worldBoundMin.x * chunk_size)
+            {
+               chunkPosition.x = (worldBoundMax.x) * chunk_size;
+            }
+            else if(xdel < 0 and chunkPosition.x == worldBoundMax.x * chunk_size)
+            {
+               chunkPosition.x = (worldBoundMin.x) * chunk_size;
+            }
+            if(ydel > 0 and chunkPosition.y == worldBoundMin.y * chunk_size)
+            {
+               chunkPosition.y = (worldBoundMax.y) * chunk_size;
+            }
+            else if(ydel < 0 and chunkPosition.y == worldBoundMax.y * chunk_size)
+            {
+               chunkPosition.y = (worldBoundMin.y) * chunk_size;
+            }
+            if(zdel > 0 and chunkPosition.z == worldBoundMin.z * chunk_size)
+            {
+               chunkPosition.z = (worldBoundMax.z) * chunk_size;
+            }
+            else if(zdel < 0 and chunkPosition.z == worldBoundMax.z * chunk_size)
+            {
+               chunkPosition.z = (worldBoundMin.z) * chunk_size;
+            }
+            chunks[i]->setChunkPosition(  chunkPosition.x, 
+                                          chunkPosition.y, 
+                                          chunkPosition.z);
+         }
+         // Mark all chunks on lower x limit + 1 as new lower x.
+         worldCentre = camChunkPos;
+      }
+   }
+}
+   
+   
 void World::deleteBlockAt(int x, int y, int z)
 {
    int xi, yi, zi;    // Chunk coords (within world)

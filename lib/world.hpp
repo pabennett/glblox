@@ -30,4 +30,7 @@ class World
       bool useFastMeshBuilder;                     // Use fast mesh generation.
       void chunkUpdateQuery();                     // Check all chunks to see which ones need an update.
       int worldViewDistance;                       // How far you can see measured in voxels.
+      glm::vec3 lastCamPosition;                   // The last known position of the camera.
+      void camPositionCheck();                     // If the camera has moved into a new chunk we may need to draw a new part of the world.
+      glm::vec3 worldCentre;                       // The chunk that is central in the world.
 };

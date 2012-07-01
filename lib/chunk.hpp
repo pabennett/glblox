@@ -87,6 +87,7 @@ class Chunk
       void meshBuilderSlow();                // Build an optimised mesh.
       void meshBuilderFast();                // Build an unoptimised mesh.
       void initialiseMeshBuilder();          // Initialise the mesh builder.
+      glm::vec3 position();                  // Get the chunk position.
       bool requireMeshUpdate();              // Test if the chunk mesh is out of date.
       bool meshBuildRunning();               // Test if the mesh builder is running.
       // Render the chunk.
@@ -96,13 +97,14 @@ class Chunk
       void buildDisplayList();               // Build the display list vector.
       unsigned int voxelcount();             // Return the number of voxels contained in the chunk.
       void initDraw(GLuint);
+      void setChunkPosition(int, int, int);  // Update the chunk world coords.
    private:
       bool modified;                         // Flag to indicate the chunk data has been modified. 
       bool visible;                          // Flag to indicate if the chunk is visible.
       bool meshBuildInProgress;              // Flag to indicate if the mesh is out of date.
 
-      void setPos(int, int, int, facePos, int); // Specific to the positions array.
-      void addFace(int, int, int, int, int, int,
+      void addFace(int, int, int, facePos, int); // Specific to the positions array.
+      void addFace2(int, int, int, int, int, int,
                    facePos, byte);              // Add a face to the vertex list.
       // Iterator used by the mesh builder.
       boost::unordered_map<Position, block>::iterator ii;

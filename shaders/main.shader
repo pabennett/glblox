@@ -20,7 +20,7 @@ vertex:
       vec4 vertex = vec4(position.x, position.y, position.z, 1);
       data.fnormal = normal;
       // Depth = length((modelview * (vertex + vectorOffset)).xyz);
-      texcoord = float(position.w + worldPosition.y) / worldHeight;
+      texcoord = mod(float(position.w + worldPosition.y) / worldHeight,1);
       gl_Position = mvp * (vertex + vectorOffset);
    }
 

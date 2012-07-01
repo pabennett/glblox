@@ -52,6 +52,22 @@ Chunk::~Chunk()
    std::cout << "CPP: Chunk object destroyed." << std::endl;
 }
 
+// Update the chunk position in the world (voxel coords).
+void Chunk::setChunkPosition(int x, int y, int z)
+{
+   pos.x = x;
+   pos.y = y;
+   pos.z = z;
+   centre.x = pos.x + 0.5 * dim.x;
+   centre.y = pos.y + 0.5 * dim.y;
+   centre.z = pos.z + 0.5 * dim.z;
+}
+
+glm::vec3 Chunk::position()
+{
+   return pos;
+}
+
 void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
 {  
 
@@ -628,7 +644,7 @@ void Chunk::meshBuilderSlow()
                      }
                   }
                   // Add the vertices required to draw this rectangle:
-                  addFace( boundXMin, boundXMax, 
+                  addFace2( boundXMin, boundXMax, 
                            boundYMin, boundYMax,
                            boundZMin, boundZMax, 
                            facing, marker);
@@ -669,12 +685,12 @@ void Chunk::meshBuilderFast()
       if(chunkData.is_full())
       {
          // The chunk is full, create a primitive mesh and terminate mesh build.
-         setPos(0, 0, 0, LEFT, size);
-         setPos(0, 0, 0, RIGHT, size);
-         setPos(0, 0, 0, ABOVE, size);
-         setPos(0, 0, 0, BELOW, size);
-         setPos(0, 0, 0, BACK, size);
-         setPos(0, 0, 0, FRONT, size);
+         addFace(0, 0, 0, LEFT, size);
+         addFace(0, 0, 0, RIGHT, size);
+         addFace(0, 0, 0, ABOVE, size);
+         addFace(0, 0, 0, BELOW, size);
+         addFace(0, 0, 0, BACK, size);
+         addFace(0, 0, 0, FRONT, size);
          verticesLeft.swap(verticesLeftBuf);  
          verticesRight.swap(verticesRightBuf);
          verticesAbove.swap(verticesAboveBuf);
@@ -715,38 +731,38 @@ void Chunk::meshBuilderFast()
        
       if(chunkData.blockLeftVisible(x,y,z))
       {
-         setPos(x, y, z, LEFT, 1);
+         addFace(x, y, z, LEFT, 1);
       }
       
       if(chunkData.blockRightVisible(x,y,z))
       {
-         setPos(x, y, z, RIGHT, 1);
+         addFace(x, y, z, RIGHT, 1);
       }
       
       if(chunkData.blockBelowVisible(x,y,z))
       {
-         setPos(x, y, z, BELOW, 1);
+         addFace(x, y, z, BELOW, 1);
       }
             
       if(chunkData.blockAboveVisible(x,y,z))
       {
-         setPos(x, y, z, ABOVE, 1);
+         addFace(x, y, z, ABOVE, 1);
       }
       
       if(chunkData.blockBackVisible(x,y,z))
       {
-         setPos(x, y, z, BACK, 1);
+         addFace(x, y, z, BACK, 1);
       }
       
       if(chunkData.blockFrontVisible(x,y,z))
       {
-         setPos(x, y, z, FRONT, 1);
+         addFace(x, y, z, FRONT, 1);
       }
       ii++;
    }
 }
 
-void Chunk::addFace(int xmin, int xmax,
+void Chunk::addFace2(int xmin, int xmax,
                         int ymin, int ymax,
                         int zmin, int zmax,
                         facePos facing, byte value
@@ -834,7 +850,7 @@ void Chunk::addFace(int xmin, int xmax,
    }
 }
                                        
-void Chunk::setPos(int x, int y, int z, facePos facing, int size)
+void Chunk::addFace(int x, int y, int z, facePos facing, int size)
 {   
    vertex v;
    int s = size;

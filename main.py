@@ -123,17 +123,19 @@ for (x,y,z),chunk in datablocks.items():
     print "Loading chunk: " + str(x) + "," + str(y) + "," + str(z)
     world.load(chunk, x, y, z, chunk_size)   
 
+world.setViewDistance(1000)
+
 consoleObj.setParameter('World Size', (wx, wy, wz))  
 consoleObj.setParameter('Chunk Size', chunk_size) 
 consoleObj.setParameter('Total Cubes', wx * wy * wz * chunk_size)
-world.setViewDistance(400)
+
 
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)
 # Key Hold Events
 def update(dt):
-    m = min(dt, 0.17)*20
+    m = min(dt, 0.17)*40
     if keys[key.W]:
         camera.move(0,0,m)
     elif keys[key.S]:
@@ -192,7 +194,8 @@ def on_draw():
 # Initialisation
 if __name__ == '__main__':
     print "Program launching..."
-    glClearColor(0.05, 0.10, 0.15, 1.0);
+    glClearColor(0.05, 0.10, 0.15, 1.0); #Night
+    glClearColor(0.95, 0.95, 0.95, 1.0); #day
     glEnable(GL_CULL_FACE)
     glEnable(GL_DEPTH_TEST)
     glCullFace(GL_BACK)
