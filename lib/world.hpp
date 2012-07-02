@@ -32,6 +32,8 @@ class World
       void load(byte*, int, int, int, int);
       void setViewDistance(int);                   // Set the viewing distance.
    private:
+      vector3i voxelCoordToVoxelIndex(vector3i); // Translate world voxel coords to voxel indices (chunk space).
+      vector3i voxelCoordToChunkIndex(vector3i); // Translate world voxel coords to chunk indices (world 'renderable zone' space).
       bool useFastMeshBuilder;                     // Use fast mesh generation.
       void chunkUpdateQuery();                     // Check all chunks to see which ones need an update.
       int worldViewDistance;                       // How far you can see measured in voxels.

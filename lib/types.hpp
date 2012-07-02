@@ -11,9 +11,10 @@ typedef struct{
    float x, y, z;
 } vector3f;
 
-typedef struct{
+struct vector3i {
    int x, y, z;
-} vector3i;
+   vector3i(int x =0,int y=0,int z=0) : x(x), y(y), z(z) {}
+};
 
 bool operator<(const vector3i &a, const vector3i &b)
 {

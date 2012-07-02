@@ -29,9 +29,9 @@ World::World(int dimx, int dimy, int dimz, int size, bool useFastMeshBuilder)
    dim.z = dimz;
    worldCentre = glm::vec3(int(dim.x/2), int(dim.y/2), int(dim.z/2));
    useFastMeshBuilder = useFastMeshBuilder;
+   int x,y,z;
    vector3i pos;
    vector3i key;
-   int x,y,z;
    
    // Build a world of chunks.
    // Ordering z,y,x is important.
@@ -62,10 +62,7 @@ World::~World()
 // Test to see if the chunk at x,y,z (chunk coords) exists.
 bool World::exists(int x, int y, int z)
 {
-   vector3i key;
-   key.x = x;
-   key.y = y;
-   key.z = z;
+   vector3i key(x,y,z);
    return not (chunks.find(key) == chunks.end());
 }
 
@@ -77,10 +74,7 @@ bool World::exists(vector3i key)
 void World::load(byte* data, int x, int y, int z, int size)
 {
    // Load the 3D array into the given chunk.
-   vector3i key;
-   key.x = x;
-   key.y = y;
-   key.z = z;
+   vector3i key(x,y,z);
    if(exists(key))
    {
       // Load external data into the chunk.
@@ -137,58 +131,60 @@ void World::camPositionCheck()
    camChunkPos.y = int(lastCamPosition.y / chunk_size);
    camChunkPos.z = int(lastCamPosition.z / chunk_size);
    glm::vec3 chunkPosition;
-   glm::vec3 worldBoundMax;
-   glm::vec3 worldBoundMin;
    int xdel, ydel, zdel;
-   worldBoundMin = glm::vec3(worldCentre.x-(dim.x/2),
+   glm::vec3 worldBoundMin = glm::vec3(worldCentre.x-(dim.x/2),
                              worldCentre.y-(dim.y/2),
                              worldCentre.z-(dim.z/2));
-   worldBoundMax = glm::vec3(worldCentre.x+(dim.x/2),
+   glm::vec3 worldBoundMax = glm::vec3(worldCentre.x+(dim.x/2),
                              worldCentre.y+(dim.y/2),
                              worldCentre.z+(dim.z/2));
    
-   if(worldCentre != camChunkPos)
+   // Calculate how far away from the original world centre the camera is
+   // Measured in chunks.
+   xdel = camChunkPos.x - worldCentre.x;
+   ydel = camChunkPos.y - worldCentre.y;
+   zdel = camChunkPos.z - worldCentre.z;
+   // If the camera has moved in any direction by 1 or more chunks...
+   if(xdel != 0 or ydel != 0 or zdel != 0)
    {
-      xdel = camChunkPos.x - worldCentre.x;
-      ydel = camChunkPos.y - worldCentre.y;
-      zdel = camChunkPos.z - worldCentre.z;
-      if(xdel != 0 or ydel != 0 or zdel != 0)
+      // Find any chunk lying on the edge of the renderable zone and move it
+      // to the opposite edge in the direction of the camera movement.
+      // This ensures there are an equal number of chunks rendered in all directions
+      // of the camera position.
+      for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
-         // Move all chunks on the lower limits to upper x + 1
-         for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
+         chunkPosition = (*i).second->position();
+         if(xdel > 0 and chunkPosition.x == worldBoundMin.x * chunk_size)
          {
-            chunkPosition = (*i).second->position();
-            if(xdel > 0 and chunkPosition.x == worldBoundMin.x * chunk_size)
-            {
-               chunkPosition.x = (worldBoundMax.x) * chunk_size;
-            }
-            else if(xdel < 0 and chunkPosition.x == worldBoundMax.x * chunk_size)
-            {
-               chunkPosition.x = (worldBoundMin.x) * chunk_size;
-            }
-            if(ydel > 0 and chunkPosition.y == worldBoundMin.y * chunk_size)
-            {
-               chunkPosition.y = (worldBoundMax.y) * chunk_size;
-            }
-            else if(ydel < 0 and chunkPosition.y == worldBoundMax.y * chunk_size)
-            {
-               chunkPosition.y = (worldBoundMin.y) * chunk_size;
-            }
-            if(zdel > 0 and chunkPosition.z == worldBoundMin.z * chunk_size)
-            {
-               chunkPosition.z = (worldBoundMax.z) * chunk_size;
-            }
-            else if(zdel < 0 and chunkPosition.z == worldBoundMax.z * chunk_size)
-            {
-               chunkPosition.z = (worldBoundMin.z) * chunk_size;
-            }
-            (*i).second->setChunkPosition( chunkPosition.x, 
-                                    chunkPosition.y, 
-                                    chunkPosition.z);
+            chunkPosition.x = (worldBoundMax.x) * chunk_size;
          }
-         // Mark all chunks on lower x limit + 1 as new lower x.
-         worldCentre = camChunkPos;
+         else if(xdel < 0 and chunkPosition.x == worldBoundMax.x * chunk_size)
+         {
+            chunkPosition.x = (worldBoundMin.x) * chunk_size;
+         }
+         if(ydel > 0 and chunkPosition.y == worldBoundMin.y * chunk_size)
+         {
+            chunkPosition.y = (worldBoundMax.y) * chunk_size;
+         }
+         else if(ydel < 0 and chunkPosition.y == worldBoundMax.y * chunk_size)
+         {
+            chunkPosition.y = (worldBoundMin.y) * chunk_size;
+         }
+         if(zdel > 0 and chunkPosition.z == worldBoundMin.z * chunk_size)
+         {
+            chunkPosition.z = (worldBoundMax.z) * chunk_size;
+         }
+         else if(zdel < 0 and chunkPosition.z == worldBoundMax.z * chunk_size)
+         {
+            chunkPosition.z = (worldBoundMin.z) * chunk_size;
+         }
+         (*i).second->setChunkPosition( chunkPosition.x, 
+                                 chunkPosition.y, 
+                                 chunkPosition.z);
       }
+      // Update the record of which chunk is currently occupied by the camera.
+      worldCentre = camChunkPos;
+      std::cout << "CPP: New world centre: " << worldCentre.x << "," << worldCentre.y << "," << worldCentre.z << std::endl;
    }
 }
    
@@ -203,10 +199,7 @@ void World::deleteBlockAt(int x, int y, int z)
    xvi = x % chunk_size;
    yvi = y % chunk_size;
    zvi = z % chunk_size;
-   vector3i index;
-   index.x = x;
-   index.y = y;
-   index.z = z;
+   vector3i index(x,y,z);
    // Get the index of the chunk encapsulating the given x,y,z coord.
    if (x >= 0 and xi < dim.x and y >= 0 and yi < dim.y and z >= 0 and zi < dim.z)
    {
@@ -225,6 +218,37 @@ void World::deleteBlockAt(int x, int y, int z)
    }
 }
 
+// Get the index of the voxel (in chunk space) for the given voxel coord.
+// Handles negative and positive coords.
+vector3i World::voxelCoordToVoxelIndex(vector3i coord)
+{
+   int x = (coord.x % chunk_size);
+   int y = (coord.y % chunk_size);
+   int z = (coord.z % chunk_size);
+   
+   x = x >= 0 ? x : chunk_size + x;
+   y = y >= 0 ? y : chunk_size + y;
+   z = z >= 0 ? z : chunk_size + z;
+
+   return vector3i(x,y,z);
+}
+
+// For the given voxel obtain the index of the associated chunk in the renderzone.
+// Handles negative and positive coords.
+vector3i World::voxelCoordToChunkIndex(vector3i coord)
+{
+   // Convert voxel world coords to chunk world coords.
+   int x = coord.x;
+   int y = coord.y;
+   int z = coord.z;
+   // Map chunk world coords to local render space (world) coords.
+   x = x >= 0 ? (x / chunk_size) % dim.x : (dim.x - 1) + (((x + 1) / chunk_size) % dim.x);
+   y = y >= 0 ? (y / chunk_size) % dim.y : (dim.y - 1) + (((y + 1) / chunk_size) % dim.y);
+   z = z >= 0 ? (z / chunk_size) % dim.z : (dim.z - 1) + (((z + 1) / chunk_size) % dim.z);
+      
+   return vector3i(x,y,z);
+}
+
 /* Delete a spherical region of voxels about the world x,y,z co-ordinates
    with the specified radius. 
    Operates across multiple chunks if necessary
@@ -234,27 +258,18 @@ void World::deleteBlockAt(int x, int y, int z)
 
 void World::modifyRegionAt(int x, int y, int z, byte val, int r)
 {
-   int xvi, yvi, zvi; // Voxel coords (within chunk)
-   int xi, yi, zi;    // Voxel coords (within world)
-   vector3i chunk_index;
+   int xi, yi, zi;      // Voxel coords (within world)
    
-   int r_sq = r * r;
+   vector3i chunkIndex; // Index of the chunk in the render space.
+   vector3i voxelIndex; // Index of the voxel in the chunk.
    
-   // Convert from world x,y,z into 'render-zone' x,y,z.
-   x = x % (dim.x * chunk_size);
-   y = y % (dim.y * chunk_size);
-   z = z % (dim.z * chunk_size);
-   
-   x = x>=0?x:(dim.x * chunk_size)+x;
-   y = y>=0?y:(dim.y * chunk_size)+y;
-   z = z>=0?z:(dim.z * chunk_size)+z;
-   
-   int x_start = x - r >= 0 ? x - r : 0;
-   int y_start = y - r >= 0 ? y - r : 0;
-   int z_start = z - r >= 0 ? z - r : 0;
-   int x_end = x + r < (dim.x * chunk_size) ? x + r : dim.x * chunk_size;
-   int y_end = y + r < (dim.y * chunk_size) ? y + r : dim.y * chunk_size;
-   int z_end = z + r < (dim.z * chunk_size) ? z + r : dim.z * chunk_size;
+   int r_sq = r * r;  
+   int x_start = x - r;
+   int y_start = y - r;
+   int z_start = z - r;
+   int x_end = x + r;
+   int y_end = y + r;
+   int z_end = z + r;
 
    if(!chunks.empty())
    {
@@ -268,19 +283,13 @@ void World::modifyRegionAt(int x, int y, int z, byte val, int r)
                // Test to see if xi,yi,zi lies within the sphere.
                if (((xi-x)*(xi-x) + (yi-y)*(yi-y) + (zi-z)*(zi-z)) < r_sq)
                {
-                  // Determine the index of the chunk holding xi,yi,zi
-                  chunk_index.x = (xi / chunk_size); 
-                  chunk_index.y = (yi / chunk_size);
-                  chunk_index.z = (zi / chunk_size);
-                    
-                  // Determine the voxel coords (chunk space) of xi,yi,zi
-                  xvi = xi % chunk_size;
-                  yvi = yi % chunk_size;
-                  zvi = zi % chunk_size;  
-                  // Delete xi,yi,zi
-                  if(exists(chunk_index))
+                  // Get the indices for the voxel and its chunk.
+                  chunkIndex = voxelCoordToChunkIndex(vector3i(xi,yi,zi));
+                  voxelIndex = voxelCoordToVoxelIndex(vector3i(xi,yi,zi));
+                  // Delete the voxel.
+                  if(exists(chunkIndex))
                   {
-                     chunks[chunk_index]->set(xvi,yvi,zvi,val);
+                     chunks[chunkIndex]->set(voxelIndex.x,voxelIndex.y,voxelIndex.z,val);
                   }
                }
             }

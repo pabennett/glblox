@@ -67,16 +67,12 @@ positionLabel = pyglet.text.Label("Tempstring",
 pyglet.clock.ClockDisplay()
 wiremode = False
 
-# Set up the camera (glblox Lib)
-camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True)
-camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
-
 # Set up the World (glblox Lib)
 chunk_size = 32
 fast_meshes = True
 
 #Open a heightmap image
-im = Image.open('savelevels/world.gif')
+im = Image.open('savelevels/world.png')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -86,7 +82,7 @@ data = np.array(im.getdata())
 # Create a world large enough to hold this image
 wx = im_width / chunk_size
 wz = im_height / chunk_size
-wy = int(max(data)/chunk_size) + 1
+wy = 16# int(max(data)/chunk_size) + 1
 print "Created a world of " + str(wx) + "x" + str(wy) + "x" + str(wz) + " chunks..."
 world = World(wx, wy, wz, chunk_size, fast_meshes)
 # The number of blocks in the volume
@@ -123,7 +119,12 @@ for (x,y,z),chunk in datablocks.items():
     print "Loading chunk: " + str(x) + "," + str(y) + "," + str(z)
     world.load(chunk, x, y, z, chunk_size)   
 
+# Specify the world view distance in voxels
 world.setViewDistance(1000)
+# Create a camera object for viewing and displaying the world
+camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True)
+camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
+camera.setPos((wx/2)*chunk_size,(wy/2)*chunk_size,(wz/2)*chunk_size)
 
 consoleObj.setParameter('World Size', (wx, wy, wz))  
 consoleObj.setParameter('Chunk Size', chunk_size) 
