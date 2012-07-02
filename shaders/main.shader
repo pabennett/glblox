@@ -12,6 +12,7 @@ vertex:
    
    out Data{
       vec3 fnormal;
+      float depth;
    } data;
       
    void main(void)
@@ -19,7 +20,7 @@ vertex:
       const vec4 vectorOffset = vec4(worldPosition, 0.0);
       vec4 vertex = vec4(position.x, position.y, position.z, 1);
       data.fnormal = normal;
-      // Depth = length((modelview * (vertex + vectorOffset)).xyz);
+      data.depth = length((mvp * (vertex + vectorOffset)).xyz);
       texcoord = mod(float(position.w + worldPosition.y) / worldHeight,1);
       gl_Position = mvp * (vertex + vectorOffset);
    }
@@ -27,6 +28,7 @@ vertex:
 fragment:
    
    import: colourmaps
+   import: utilities
 
    out vec3 fragment;
    
@@ -34,6 +36,7 @@ fragment:
    
    in Data{
       vec3 fnormal;
+      float depth;
    } data;
    
    void main()
