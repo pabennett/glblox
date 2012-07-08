@@ -71,6 +71,7 @@ bool World::exists(vector3i key)
    return not (chunks.find(key) == chunks.end());
 }
 
+// Load a 3D array of bytes into a chunk of equivalent dimensions.
 void World::load(byte* data, int x, int y, int z, int size)
 {
    // Load the 3D array into the given chunk.
@@ -88,7 +89,50 @@ void World::load(byte* data, int x, int y, int z, int size)
    }
    World::chunkUpdateQuery(); // Add modified chunks to the update queue.
 }
+
+// Load a 2D heightmap into the world chunks. (world must be pre-sized accordingly)
+void World::loadHeightmap(byte* data, int size)
+{
+   int x,y,z;     // world x,z voxel coords.
+   int cy;        // world chunk y coords.
+   int h;
+   vector3i chunkIndex;
+   int vx, vz;
    
+   std::vector<byte> heightmap(data, data + ((dim.x*size)*(dim.z*size)));
+   std::cout << "CPP: Reading heightmap" << std::endl;
+   if(heightmap.size() != (dim.x * chunk_size) * (dim.z * chunk_size))
+   {
+      std::cout << "CPP: Heightmap dimensions do not match world size!" << std::endl;
+      std::cout << "CPP: " << heightmap.size() << std::endl;
+      std::cout << "CPP: " << dim.x << "," << dim.y << "," << dim.z << std::endl;
+   }
+   else
+   {
+      for(x = 0; x < (dim.x * chunk_size); x++)
+      {
+         for(z = 0; z < (dim.z * chunk_size); z++)
+         {
+            vx = (x % chunk_size); // Voxel X
+            vz = (z % chunk_size); // Voxel Z
+            chunkIndex.x = (x / chunk_size);
+            chunkIndex.z = (z / chunk_size);
+            h = heightmap[x + (z * chunk_size * dim.x)];
+            chunkIndex.y = 0;
+            while(h > 0)
+            {
+               // Create a stack of voxels of height h.
+               // setHeight clamps h to the chunk size.
+               chunks[chunkIndex]->setHeight(vx,vz,h);
+               chunkIndex.y++;
+               h-=chunk_size;
+            }
+         }
+      }
+      World::chunkUpdateQuery(); // Add modified chunks to the update queue.
+   }
+}
+
 // The main draw loop call
 void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
 {
@@ -142,10 +186,10 @@ void World::camPositionCheck()
    // Calculate how far away from the original world centre the camera is
    // Measured in chunks.
    xdel = camChunkPos.x - worldCentre.x;
-   ydel = camChunkPos.y - worldCentre.y;
+   //ydel = camChunkPos.y - worldCentre.y;
    zdel = camChunkPos.z - worldCentre.z;
    // If the camera has moved in any direction by 1 or more chunks...
-   if(xdel != 0 or ydel != 0 or zdel != 0)
+   if(xdel != 0 or zdel != 0)
    {
       // Find any chunk lying on the edge of the renderable zone and move it
       // to the opposite edge in the direction of the camera movement.
@@ -162,14 +206,14 @@ void World::camPositionCheck()
          {
             chunkPosition.x = (worldBoundMin.x) * chunk_size;
          }
-         if(ydel > 0 and chunkPosition.y == worldBoundMin.y * chunk_size)
-         {
-            chunkPosition.y = (worldBoundMax.y) * chunk_size;
-         }
-         else if(ydel < 0 and chunkPosition.y == worldBoundMax.y * chunk_size)
-         {
-            chunkPosition.y = (worldBoundMin.y) * chunk_size;
-         }
+         // if(ydel > 0 and chunkPosition.y == worldBoundMin.y * chunk_size)
+         // {
+            // chunkPosition.y = (worldBoundMax.y) * chunk_size;
+         // }
+         // else if(ydel < 0 and chunkPosition.y == worldBoundMax.y * chunk_size)
+         // {
+            // chunkPosition.y = (worldBoundMin.y) * chunk_size;
+         // }
          if(zdel > 0 and chunkPosition.z == worldBoundMin.z * chunk_size)
          {
             chunkPosition.z = (worldBoundMax.z) * chunk_size;
@@ -247,6 +291,19 @@ vector3i World::voxelCoordToChunkIndex(vector3i coord)
    z = z >= 0 ? (z / chunk_size) % dim.z : (dim.z - 1) + (((z + 1) / chunk_size) % dim.z);
       
    return vector3i(x,y,z);
+}
+
+// For the given chunk coord (world space) obtain the associated
+// chunk index for the render zone.
+vector3i World::chunkCoordToChunkIndex(vector3i coord)
+{
+   int x = coord.x % dim.x;
+   int y = coord.y % dim.y;
+   int z = coord.z % dim.z;
+   
+   x = x >= 0? x % dim.x : dim.x + (x % dim.x);
+   x = y >= 0? y % dim.y : dim.y + (y % dim.y);   
+   x = z >= 0? z % dim.z : dim.z + (z % dim.z);   
 }
 
 /* Delete a spherical region of voxels about the world x,y,z co-ordinates
@@ -405,7 +462,7 @@ void World::random()
 {
    int x,y,z;        // Voxel indices
    int cx, cy, cz;   // Chunk indices
-      
+   int h;
    int size_sq = dim.x * dim.y;
    
    float simplex;
@@ -414,9 +471,9 @@ void World::random()
       std::cout << "CPP: Randomising chunks using simplex noise function..." << std::endl;
       for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
-         cz = (*i).first.z;
-         cy = (*i).first.y;
-         cx = (*i).first.x;
+         cz = (*i).first.z * chunk_size;
+         cy = (*i).first.y * chunk_size;
+         cx = (*i).first.x * chunk_size;
                   
          
          (*i).second->empty();
@@ -424,15 +481,21 @@ void World::random()
          {
             for (z = 0; z < chunk_size; z++)
             {
-               for (y = 0; y < chunk_size; y++)
-               {
-                  simplex = glm::simplex(glm::vec3((cx+x) / 32.f, (cy+y) / 64.f, (cz+z) / 32.f)) * 255;
-                  simplex = simplex >0.5f?1:0;
-                  (*i).second->set(x,y,z,int(simplex));
-               }
+               //for (y = 0; y < chunk_size; y++)
+               //{
+                  simplex = glm::simplex(glm::vec2((cx+x)/256.f,(cz+z)/256.f));
+                  h = int(simplex * float(chunk_size));
+                  (*i).second->setHeight(x,z,h);
+               //}
             }
          }
       }
       World::chunkUpdateQuery(); // Add modified chunks to the update queue.
    }
 }
+
+// Load or generate data for the chunk at coords x,y,z.
+// x,y,z are chunk coords in world space.
+//void World::loadChunk(int x, int y, int z)
+//{
+//   vector3i chunkIndex = 

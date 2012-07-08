@@ -82,6 +82,7 @@ class Chunk
       void load(byte*, int);                 // Load external data into the chunk.
       byte get(int, int, int);               // Get the value of a specific voxel.
       void set(int, int, int, byte);         // Set the value of a specific voxel.
+      void setHeight(int, int, int);
       void fill();                           // Completely fill the chunk with solid voxels.
       void empty();                          // Empty the chunk.   
       void meshBuilderSlow();                // Build an optimised mesh.

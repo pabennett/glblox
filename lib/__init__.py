@@ -75,6 +75,8 @@ WORLD_numVertices.argtypes = c_void_p,
 WORLD_numVertices.restype = c_int
 WORLD_load = vol_lib.worldLoad
 WORLD_load.argtypes = c_void_p, c_void_p, c_int, c_int, c_int, c_int
+WORLD_loadHeightmap = vol_lib.worldLoadHeightmap
+WORLD_loadHeightmap.argtypes = c_void_p, c_void_p, c_int
 WORLD_deleteBlockAt = vol_lib.worldDeleteBlockAt
 WORLD_deleteBlockAt.argtypes = c_void_p, c_int, c_int, c_int
 WORLD_worldModifyRegionAt = vol_lib.worldModifyRegionAt
@@ -99,6 +101,9 @@ class World:
     def load(self, array, x, y, z, chunk_size):
         c_array_p = array.ctypes.data_as(c_char_p)
         vol_lib.worldLoad(self.obj,c_array_p, x, y, z, chunk_size)
+    def loadHeightmap(self, array, chunk_size):
+        c_array_p = array.ctypes.data_as(c_char_p)
+        vol_lib.worldLoadHeightmap(self.obj,c_array_p, chunk_size)
     def deleteBlockAt(self, x, y, z):
         vol_lib.worldDeleteBlockAt(self.obj, x, y, z)
     def modifyRegionAt(self, x, y, z, val, radius):

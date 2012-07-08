@@ -138,4 +138,8 @@ extern "C" {
    {
       world->load(data, x, y, z, chunk_size);
    }
+   void worldLoadHeightmap(World* world, byte* data, int chunk_size)
+   {
+      world->loadHeightmap(data, chunk_size);
+   }
 }

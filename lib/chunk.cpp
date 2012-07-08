@@ -240,7 +240,7 @@ void Chunk::update(bool useFastMeshBuilder)
          buildDisplayList();
       }
    }
-   std::cout << "CPP: Chunk mesh rebuild...(" << GetTimeMs64() - time << "ms)" << std::endl;
+   //std::cout << "CPP: Chunk mesh rebuild...(" << GetTimeMs64() - time << "ms)" << std::endl;
 }
 
 void Chunk::initDraw(GLuint program)
@@ -403,6 +403,22 @@ void Chunk::load(byte* initialiser, int chunk_size)
 void Chunk::set(int x, int y, int z, byte initialiser)
 {
    chunkData.set(x,y,z,initialiser);
+   modified = chunkData.is_modified() or modified;
+   visible = !chunkData.is_empty();
+   chunkData.clearModifiedState();
+}
+
+// Create a pillar of voxels at x,z with height h.
+void Chunk::setHeight(int x, int z, int h)
+{
+   int y;
+   // Clamp height values.
+   h = h >= dim.y ? dim.y - 1 : h;
+   h = h < 0 ? 0 : h;
+   for(y = 0; y <= h; y++)
+   {
+      chunkData.set(x,y,z,1);
+   }
    modified = chunkData.is_modified() or modified;
    visible = !chunkData.is_empty();
    chunkData.clearModifiedState();

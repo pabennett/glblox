@@ -68,56 +68,33 @@ pyglet.clock.ClockDisplay()
 wiremode = False
 
 # Set up the World (glblox Lib)
-chunk_size = 32
+chunk_size = 64
 fast_meshes = True
 
 #Open a heightmap image
-im = Image.open('savelevels/world.png')
+im = Image.open('savelevels/world.gif')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
 (im_width,im_height) = im.size
+im_max = im.getextrema()[1]
 # Convert the image data into a numpy array
-data = np.array(im.getdata())
+data = np.array(im.getdata(), dtype=c_byte)
 # Create a world large enough to hold this image
 wx = im_width / chunk_size
 wz = im_height / chunk_size
-wy = 16# int(max(data)/chunk_size) + 1
+wy = int(im_max/chunk_size) + 1
+
 print "Created a world of " + str(wx) + "x" + str(wy) + "x" + str(wz) + " chunks..."
 world = World(wx, wy, wz, chunk_size, fast_meshes)
-# The number of blocks in the volume
-arraysize = chunk_size*chunk_size*chunk_size
-# The volume height in chunks
-vol_height_chunks = (max(data)/chunk_size)
-# Dictionary of arrays (chunks)
-datablocks = {}
-for x in xrange(0, wx):
-    for y in xrange(0, wy):
-        for z in xrange(0, wz):
-            datablocks[(x,y,z)] = np.zeros((arraysize), dtype=c_byte) 
-
-# Break the image into tiles representing pillars of chunks    
-for tile_x in xrange(0,im_width/chunk_size):
-    for tile_y in xrange(0,im_height/chunk_size):
-        print "Processing tile: " + str(tile_x) + "," + str(tile_y)
-        # Load the tile data into the pillar of chunks.
-        for x in xrange(0,chunk_size):
-            for z in xrange(0, chunk_size):
-                chunk_x_idx = (tile_x * chunk_size)
-                chunk_z_idx = (tile_y * chunk_size)
-                # Y ranges from 0 to the intensity of the pixel at this x,z
-                for y in xrange(0, data[chunk_x_idx + x + ((chunk_z_idx + z) * im_height)]):
-                    # Get the block coords
-                    block_x = x
-                    block_y = ((y - (y/chunk_size) * chunk_size) * chunk_size)
-                    block_z = (z * chunk_size * chunk_size)
-                    # Set the current block to solid
-                    datablocks[(tile_x,y/chunk_size,tile_y)][block_x + block_y + block_z] = 1
-
-print "Loading World data into chunks..."
-for (x,y,z),chunk in datablocks.items():
-    print "Loading chunk: " + str(x) + "," + str(y) + "," + str(z)
-    world.load(chunk, x, y, z, chunk_size)   
+    
+world.loadHeightmap(data,chunk_size)
+  
+#wx = 10
+#wy = 1
+#wz = 4
+#world = World(wx,wy,wx,chunk_size,fast_meshes)
+#world.random()
 
 # Specify the world view distance in voxels
 world.setViewDistance(1000)
@@ -165,7 +142,7 @@ def volumeUpdates(dt):
         world.modifyRegionAt(position[0], position[1], position[2], 0, 12)
 
 clock.schedule_interval(statusUpdates, 0.2)
-clock.schedule_interval_soft(volumeUpdates, 0.2)
+#clock.schedule_interval_soft(volumeUpdates, 0.2)
 
 # Set up the Mouse handler (pyglet)
 @window.event
@@ -185,9 +162,7 @@ def on_draw():
         glPolygonMode(GL_FRONT, GL_FILL)
     # Draw World   
     world.draw(program.id, camera)
-    # Show vertex count
-    #renderingLabel.draw()   
-    #positionLabel.draw()
+    # Show Console Data
     consoleObj.draw()
     # Show FPS       
     fps.draw()

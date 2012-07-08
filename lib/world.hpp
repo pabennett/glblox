@@ -30,10 +30,12 @@ class World
       void modifyRegionAt(int, int, int, byte, int);// Delete a spherical region of voxels at the
                                                    // specified world coord with the specified radius.
       void load(byte*, int, int, int, int);
+      void loadHeightmap(byte*, int);
       void setViewDistance(int);                   // Set the viewing distance.
    private:
       vector3i voxelCoordToVoxelIndex(vector3i); // Translate world voxel coords to voxel indices (chunk space).
       vector3i voxelCoordToChunkIndex(vector3i); // Translate world voxel coords to chunk indices (world 'renderable zone' space).
+      vector3i chunkCoordToChunkIndex(vector3i);   // Translate chunk world coords to chunk render zone indices.
       bool useFastMeshBuilder;                     // Use fast mesh generation.
       void chunkUpdateQuery();                     // Check all chunks to see which ones need an update.
       int worldViewDistance;                       // How far you can see measured in voxels.

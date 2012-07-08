@@ -45,7 +45,6 @@ fragment:
       vec3 colours;
       
       colours = thermal(texcoord);
-
       red = colours.x;
       green = colours.y;
       blue = colours.z;
@@ -69,5 +68,6 @@ fragment:
             }
          }
       }
+      //fragment = fog(vec3(red, green, blue),vec3(0.95, 0.95, 0.95),data.depth,0.003);
       fragment = vec3(red, green, blue);
    }
