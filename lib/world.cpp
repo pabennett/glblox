@@ -16,7 +16,7 @@
 
 #include "world.hpp"
                                              
-World::World(int dimx, int dimy, int dimz, int size, bool useFastMeshBuilder)
+World::World(int dimx, int dimy, int dimz, int size, bool yWrapping)
 {
    // Chunk size must be power of 2
    if(!((size > 0) && ((size & (size - 1)) == 0)))
@@ -27,8 +27,8 @@ World::World(int dimx, int dimy, int dimz, int size, bool useFastMeshBuilder)
    dim.x = dimx;
    dim.y = dimy;
    dim.z = dimz;
+   yWrappingEnabled = yWrapping;
    worldCentre = glm::vec3(int(dim.x/2), int(dim.y/2), int(dim.z/2));
-   useFastMeshBuilder = useFastMeshBuilder;
    int x,y,z;
    vector3i pos;
    vector3i key;
@@ -171,11 +171,12 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
 void World::camPositionCheck()
 {
    glm::vec3 camChunkPos;
-   camChunkPos.x = int(lastCamPosition.x / chunk_size);
-   camChunkPos.y = int(lastCamPosition.y / chunk_size);
-   camChunkPos.z = int(lastCamPosition.z / chunk_size);
+   camChunkPos = voxelCoordToChunkCoord(lastCamPosition);
    glm::vec3 chunkPosition;
    int xdel, ydel, zdel;
+   ydel = 0;
+   xdel = 0;
+   zdel = 0;
    glm::vec3 worldBoundMin = glm::vec3(worldCentre.x-(dim.x/2),
                              worldCentre.y-(dim.y/2),
                              worldCentre.z-(dim.z/2));
@@ -186,11 +187,15 @@ void World::camPositionCheck()
    // Calculate how far away from the original world centre the camera is
    // Measured in chunks.
    xdel = camChunkPos.x - worldCentre.x;
-   //ydel = camChunkPos.y - worldCentre.y;
+   if(yWrappingEnabled)
+   {
+      ydel = camChunkPos.y - worldCentre.y;
+   }
    zdel = camChunkPos.z - worldCentre.z;
    // If the camera has moved in any direction by 1 or more chunks...
-   if(xdel != 0 or zdel != 0)
+   if(xdel != 0 or zdel != 0 or ydel != 0)
    {
+      std::cout << "CPP: Cam delta: " << xdel << "," << ydel << "," << zdel << std::endl;
       // Find any chunk lying on the edge of the renderable zone and move it
       // to the opposite edge in the direction of the camera movement.
       // This ensures there are an equal number of chunks rendered in all directions
@@ -206,14 +211,6 @@ void World::camPositionCheck()
          {
             chunkPosition.x = (worldBoundMin.x) * chunk_size;
          }
-         // if(ydel > 0 and chunkPosition.y == worldBoundMin.y * chunk_size)
-         // {
-            // chunkPosition.y = (worldBoundMax.y) * chunk_size;
-         // }
-         // else if(ydel < 0 and chunkPosition.y == worldBoundMax.y * chunk_size)
-         // {
-            // chunkPosition.y = (worldBoundMin.y) * chunk_size;
-         // }
          if(zdel > 0 and chunkPosition.z == worldBoundMin.z * chunk_size)
          {
             chunkPosition.z = (worldBoundMax.z) * chunk_size;
@@ -221,6 +218,14 @@ void World::camPositionCheck()
          else if(zdel < 0 and chunkPosition.z == worldBoundMax.z * chunk_size)
          {
             chunkPosition.z = (worldBoundMin.z) * chunk_size;
+         }
+         if(ydel > 0 and chunkPosition.y == worldBoundMin.y * chunk_size)
+         {
+            chunkPosition.y = (worldBoundMax.y) * chunk_size;
+         }
+         else if(ydel < 0 and chunkPosition.y == worldBoundMax.y * chunk_size)
+         {
+            chunkPosition.y = (worldBoundMin.y) * chunk_size;
          }
          (*i).second->setChunkPosition( chunkPosition.x, 
                                  chunkPosition.y, 
@@ -277,6 +282,18 @@ vector3i World::voxelCoordToVoxelIndex(vector3i coord)
    return vector3i(x,y,z);
 }
 
+glm::vec3 World::voxelCoordToChunkCoord(glm::vec3 coord)
+{
+   int x = coord.x;
+   int y = coord.y;
+   int z = coord.z;
+   
+   x = x >= 0 ? (x / chunk_size) : (x / chunk_size) - 1;
+   y = y >= 0 ? (y / chunk_size) : (y / chunk_size) - 1;
+   z = z >= 0 ? (z / chunk_size) : (z / chunk_size) - 1; 
+   return glm::vec3(x, y, z);
+}
+
 // For the given voxel obtain the index of the associated chunk in the renderzone.
 // Handles negative and positive coords.
 vector3i World::voxelCoordToChunkIndex(vector3i coord)
@@ -293,6 +310,23 @@ vector3i World::voxelCoordToChunkIndex(vector3i coord)
    return vector3i(x,y,z);
 }
 
+// For the given voxel obtain the index of the associated chunk in the renderzone.
+// Handles negative and positive coords.
+glm::vec3 World::voxelCoordToChunkIndex(glm::vec3 coord)
+{
+   // Convert voxel world coords to chunk world coords.
+   int x = coord.x;
+   int y = coord.y;
+   int z = coord.z;
+   // Map chunk world coords to local render space (world) coords.
+   x = x >= 0 ? (x / chunk_size) % dim.x : (dim.x - 1) + (((x + 1) / chunk_size) % dim.x);
+   y = y >= 0 ? (y / chunk_size) % dim.y : (dim.y - 1) + (((y + 1) / chunk_size) % dim.y);
+   z = z >= 0 ? (z / chunk_size) % dim.z : (dim.z - 1) + (((z + 1) / chunk_size) % dim.z);
+      
+   return glm::vec3(x,y,z);
+}
+
+
 // For the given chunk coord (world space) obtain the associated
 // chunk index for the render zone.
 vector3i World::chunkCoordToChunkIndex(vector3i coord)
@@ -304,6 +338,7 @@ vector3i World::chunkCoordToChunkIndex(vector3i coord)
    x = x >= 0? x % dim.x : dim.x + (x % dim.x);
    x = y >= 0? y % dim.y : dim.y + (y % dim.y);   
    x = z >= 0? z % dim.z : dim.z + (z % dim.z);   
+   return vector3i(x,y,z);
 }
 
 /* Delete a spherical region of voxels about the world x,y,z co-ordinates

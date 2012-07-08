@@ -69,10 +69,10 @@ wiremode = False
 
 # Set up the World (glblox Lib)
 chunk_size = 64
-fast_meshes = True
+yWrapping = True
 
 #Open a heightmap image
-im = Image.open('savelevels/world.gif')
+im = Image.open('savelevels/world.png')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -86,7 +86,7 @@ wz = im_height / chunk_size
 wy = int(im_max/chunk_size) + 1
 
 print "Created a world of " + str(wx) + "x" + str(wy) + "x" + str(wz) + " chunks..."
-world = World(wx, wy, wz, chunk_size, fast_meshes)
+world = World(wx, wy, wz, chunk_size, yWrapping)
     
 world.loadHeightmap(data,chunk_size)
   

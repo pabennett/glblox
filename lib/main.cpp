@@ -90,9 +90,9 @@ extern "C" {
                    int dimy, 
                    int dimz, 
                    int chunk_size, 
-                   bool useFastMeshBuilder)
+                   bool yWrapping)
    {
-      return new World(dimx, dimy, dimz, chunk_size, useFastMeshBuilder);
+      return new World(dimx, dimy, dimz, chunk_size, yWrapping);
    }
    
    void worldDraw(World* world, Camera* camera, GLuint program)

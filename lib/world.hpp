@@ -35,6 +35,8 @@ class World
    private:
       vector3i voxelCoordToVoxelIndex(vector3i); // Translate world voxel coords to voxel indices (chunk space).
       vector3i voxelCoordToChunkIndex(vector3i); // Translate world voxel coords to chunk indices (world 'renderable zone' space).
+      glm::vec3 voxelCoordToChunkIndex(glm::vec3); // Translate world voxel coords to chunk indices (world 'renderable zone' space).
+      glm::vec3 voxelCoordToChunkCoord(glm::vec3 coord); // Translate voxel world coords to chunk coords.
       vector3i chunkCoordToChunkIndex(vector3i);   // Translate chunk world coords to chunk render zone indices.
       bool useFastMeshBuilder;                     // Use fast mesh generation.
       void chunkUpdateQuery();                     // Check all chunks to see which ones need an update.
@@ -42,4 +44,5 @@ class World
       glm::vec3 lastCamPosition;                   // The last known position of the camera.
       void camPositionCheck();                     // If the camera has moved into a new chunk we may need to draw a new part of the world.
       glm::vec3 worldCentre;                       // The chunk that is central in the world.
+      bool yWrappingEnabled;                       // The world is infinite in the y-axis.
 };
