@@ -83,6 +83,8 @@ WORLD_worldModifyRegionAt = vol_lib.worldModifyRegionAt
 WORLD_worldModifyRegionAt.argtypes = c_void_p, c_int, c_int, c_int, c_byte, c_int
 WORLD_worldSetViewDistance = vol_lib.worldSetViewDistance
 WORLD_worldSetViewDistance.argtypes = c_void_p, c_int
+WORLD_worldSetRandomTerrainEnabledState = vol_lib.worldSetRandomTerrainEnabledState
+WORLD_worldSetRandomTerrainEnabledState.argtypes = c_void_p, c_bool
        
 class World:
     def __init__(self,dimx,dimy,dimz,chunk_size,xWrap,yWrap,zWrap):
@@ -110,3 +112,5 @@ class World:
         vol_lib.worldModifyRegionAt(self.obj, x, y, z, val, radius)
     def setViewDistance(self, distance):
         vol_lib.worldSetViewDistance(self.obj, distance)
+    def setRandomTerrainEnabledState(self, enabled):
+        vol_lib.worldSetRandomTerrainEnabledState(self.obj, enabled)

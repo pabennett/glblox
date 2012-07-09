@@ -112,6 +112,11 @@ extern "C" {
       world->fill();
    }
    
+   void worldSetRandomTerrainEnabledState(World* world, bool enabled)
+   {
+      world->setRandomTerrainEnabledState(enabled);
+   }
+   
    void worldRandom(World* world)
    {
       world->random();

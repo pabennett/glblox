@@ -35,6 +35,7 @@ class World
       void loadHeightmap(byte*, int);
       void setViewDistance(int);                   // Set the viewing distance.
       void loadRegion(int, int);                   // Load data for the given x,z region.
+      void setRandomTerrainEnabledState(bool);     // Enable or disable random terrain wrapping.
    private:
       vector3i voxelCoordToVoxelIndex(vector3i); // Translate world voxel coords to voxel indices (chunk space).
       vector3i voxelCoordToChunkIndex(vector3i); // Translate world voxel coords to chunk indices (world 'renderable zone' space).
@@ -51,4 +52,5 @@ class World
       bool yWrappingEnabled;                       // The world is infinite in the y-axis.
       bool zWrappingEnabled;                       // The world is infinite in the z-axis.
       PerlinNoise* terrainGen;
+      bool randomTerrainEnabled;                   // Flag to indicate whether or not random terrain should be loaded into new regions.
 };

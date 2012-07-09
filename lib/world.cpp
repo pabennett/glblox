@@ -80,6 +80,12 @@ bool World::exists(vector3i key)
    return not (chunks.find(key) == chunks.end());
 }
 
+// Enable or disable random terrain wrapping
+void World::setRandomTerrainEnabledState(bool enabled)
+{
+   randomTerrainEnabled = enabled;
+}
+
 // Load a 3D array of bytes into a chunk of equivalent dimensions.
 void World::load(byte* data, int x, int y, int z, int size)
 {
@@ -296,7 +302,7 @@ void World::camPositionCheck()
          (*i).second->setChunkPosition( chunkPosition.x, 
                                         chunkPosition.y, 
                                         chunkPosition.z);
-         if(chunkUpdated and (*i).first.y == 0)
+         if(chunkUpdated and (*i).first.y == 0 and randomTerrainEnabled)
          {
             std::cout << "CPP: Pushed new region for loading." << std::endl;
             //loadRegion(chunkPosition.x, chunkPosition.z);

@@ -74,7 +74,7 @@ yWrap = False
 zWrap = True
 
 #Open a heightmap image
-im = Image.open('savelevels/world.png')
+im = Image.open('savelevels/world.gif')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -89,7 +89,7 @@ wy = int(im_max/chunk_size) + 1
 
 print "Created a world of " + str(wx) + "x" + str(wy) + "x" + str(wz) + " chunks..."
 world = World(wx, wy, wz, chunk_size,xWrap,yWrap,zWrap)
-#world = World(30,2,10,chunk_size,xWrap,yWrap,zWrap)
+#world = World(30,3,15,chunk_size,xWrap,yWrap,zWrap)
 
 world.loadHeightmap(data,chunk_size)
   
@@ -101,6 +101,7 @@ world.loadHeightmap(data,chunk_size)
 
 # Specify the world view distance in voxels
 world.setViewDistance(1000)
+world.setRandomTerrainEnabledState(False)
 # Create a camera object for viewing and displaying the world
 camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
@@ -145,7 +146,7 @@ def volumeUpdates(dt):
         world.modifyRegionAt(position[0], position[1], position[2], 0, 12)
 
 clock.schedule_interval(statusUpdates, 0.2)
-#clock.schedule_interval_soft(volumeUpdates, 0.1)
+clock.schedule_interval_soft(volumeUpdates, 0.1)
 
 # Set up the Mouse handler (pyglet)
 @window.event
