@@ -90,9 +90,11 @@ extern "C" {
                    int dimy, 
                    int dimz, 
                    int chunk_size, 
-                   bool yWrapping)
+                   bool xWrap,
+                   bool yWrap,
+                   bool zWrap)
    {
-      return new World(dimx, dimy, dimz, chunk_size, yWrapping);
+      return new World(dimx, dimy, dimz, chunk_size, xWrap, yWrap, zWrap);
    }
    
    void worldDraw(World* world, Camera* camera, GLuint program)

@@ -12,22 +12,26 @@ class smallVolume
 { 
    public:
       smallVolume(int);
-      bool is_solid(int, int, int);
-      byte get(int, int, int);
-      void set(int, int, int, byte);
-      void fill();
-      void empty();
+      // Capacity
       bool is_empty();
       bool is_modified();
       bool is_full();
-      void clearModifiedState();
+      bool is_solid(int, int, int);
+      // Lookup
+      byte get(int, int, int);
       bool blockLeftVisible(int, int, int);
       bool blockRightVisible(int, int, int);
       bool blockAboveVisible(int, int, int);
       bool blockBelowVisible(int, int, int);
       bool blockFrontVisible(int, int, int);
       bool blockBackVisible(int, int, int);
-      // Expose volume data with iterators only
+      // Modification
+      void yRangeSet(int, int, int, int, byte);
+      void empty();
+      void set(int, int, int, byte);
+      void fill();
+      void clearModifiedState();
+      // Iterators
       iterator begin() { return volumeData.begin(); }
       iterator end() { return volumeData.end(); }
    protected:

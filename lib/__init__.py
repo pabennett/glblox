@@ -85,9 +85,9 @@ WORLD_worldSetViewDistance = vol_lib.worldSetViewDistance
 WORLD_worldSetViewDistance.argtypes = c_void_p, c_int
        
 class World:
-    def __init__(self,dimx,dimy,dimz,chunk_size,yWrapping):
+    def __init__(self,dimx,dimy,dimz,chunk_size,xWrap,yWrap,zWrap):
         vol_lib.initGLEW()
-        self.obj = vol_lib.newWorld(dimx,dimy,dimz,chunk_size,yWrapping)
+        self.obj = vol_lib.newWorld(dimx,dimy,dimz,chunk_size,xWrap,yWrap,zWrap)
     def draw(self, program, camera):
         vol_lib.worldDraw(self.obj, camera.obj, program)
     def fillSpheres(self):

@@ -16,7 +16,7 @@
 
 #include "world.hpp"
                                              
-World::World(int dimx, int dimy, int dimz, int size, bool yWrapping)
+World::World(int dimx, int dimy, int dimz, int size, bool xWrap, bool yWrap, bool zWrap)
 {
    // Chunk size must be power of 2
    if(!((size > 0) && ((size & (size - 1)) == 0)))
@@ -27,11 +27,20 @@ World::World(int dimx, int dimy, int dimz, int size, bool yWrapping)
    dim.x = dimx;
    dim.y = dimy;
    dim.z = dimz;
-   yWrappingEnabled = yWrapping;
+   xWrappingEnabled = xWrap;
+   yWrappingEnabled = yWrap;
+   zWrappingEnabled = zWrap;
    worldCentre = glm::vec3(int(dim.x/2), int(dim.y/2), int(dim.z/2));
    int x,y,z;
    vector3i pos;
    vector3i key;
+   //PerlinNoise(double _persistence, double _frequency, double _amplitude, int _octaves, int _randomseed);
+   double persistence = 1;
+   double frequency = 5;
+   double amplitude = 4;
+   int octaves = 1;
+   int randomseed = 3;
+   terrainGen = new PerlinNoise(persistence,frequency,amplitude,octaves,randomseed);
    
    // Build a world of chunks.
    // Ordering z,y,x is important.
@@ -139,15 +148,38 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
    int x,y,z;
    vertices = 0;
    lastCamPosition = camPosition;
+   glm::vec3 pos;
    
    if(!chunks.empty())
    {
+      // Update our knowledge of where the camera is positioned in the world.
       camPositionCheck();
       
-      // Pull one chunk from the update queue and update its mesh.
+      /* Region Loading Step */
+      
+      // As the camera moves through the world load new 2D heightmap tiles
+      // and generate meshes to create the illusion of infinite space.
+      if(region2DLoaderQueue.size() != 0)
+      {
+         pos = region2DLoaderQueue.back()->position();
+         loadRegion(pos.x, pos.z);
+         region2DLoaderQueue.pop_back();
+         std::cout << "CPP: Regions awaiting load: " << region2DLoaderQueue.size() << std::endl;
+         if(region2DLoaderQueue.size() == 0)
+         {
+            chunkUpdateQuery();
+         }
+      }
+      
+      /* Volume Modification Step */
+      
+      // As chunks are modified, either by new regions of the world being loaded
+      // or by the user, add them to the update queue and on each frame allow
+      // a certain amount of work to be contributed towards mesh updates.
       if(chunkUpdateQueue.size() != 0)
       {
-         chunkUpdateQueue.back()->update(true);
+         // Use the fast mesh builder with 8000 work cycles.
+         chunkUpdateQueue.back()->update(true, 6000);
          if(!chunkUpdateQueue.back()->meshBuildRunning())
          {
             // If the mesh for this chunk was sucessfully rebuilt remove it from
@@ -156,6 +188,13 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
             std::cout << "CPP: Chunks awaiting update: " << chunkUpdateQueue.size() << std::endl;
          }
       }
+      
+      /* Mesh Optimisation Step */
+      
+      // If no other work is needed, start to optimise meshes to reduce polycount
+      // Not currently implemented.
+      
+      /* Draw Step */
 
       // Call draw on all chunks to render them.
       for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
@@ -174,6 +213,7 @@ void World::camPositionCheck()
    camChunkPos = voxelCoordToChunkCoord(lastCamPosition);
    glm::vec3 chunkPosition;
    int xdel, ydel, zdel;
+   bool chunkUpdated;
    ydel = 0;
    xdel = 0;
    zdel = 0;
@@ -184,18 +224,30 @@ void World::camPositionCheck()
                              worldCentre.y+(dim.y/2),
                              worldCentre.z+(dim.z/2));
    
-   // Calculate how far away from the original world centre the camera is
-   // Measured in chunks.
-   xdel = camChunkPos.x - worldCentre.x;
+   worldBoundMin.x *= chunk_size;
+   worldBoundMin.y *= chunk_size;
+   worldBoundMin.z *= chunk_size;
+   worldBoundMax.x *= chunk_size;
+   worldBoundMax.y *= chunk_size;
+   worldBoundMax.z *= chunk_size;
+   
+   // Calculate how far away from the original world centre the camera is (in chunks)
+   // Wrapping in any axis allows infinite terrain for that axis.
+   if(xWrappingEnabled)
+   {
+      xdel = camChunkPos.x - worldCentre.x;
+   }
    if(yWrappingEnabled)
    {
       ydel = camChunkPos.y - worldCentre.y;
    }
-   zdel = camChunkPos.z - worldCentre.z;
+   if(zWrappingEnabled)
+   {
+      zdel = camChunkPos.z - worldCentre.z;
+   }
    // If the camera has moved in any direction by 1 or more chunks...
    if(xdel != 0 or zdel != 0 or ydel != 0)
    {
-      std::cout << "CPP: Cam delta: " << xdel << "," << ydel << "," << zdel << std::endl;
       // Find any chunk lying on the edge of the renderable zone and move it
       // to the opposite edge in the direction of the camera movement.
       // This ensures there are an equal number of chunks rendered in all directions
@@ -203,33 +255,44 @@ void World::camPositionCheck()
       for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
          chunkPosition = (*i).second->position();
-         if(xdel > 0 and chunkPosition.x == worldBoundMin.x * chunk_size)
+         chunkUpdated = false;
+         if(xdel > 0 and chunkPosition.x == worldBoundMin.x)
          {
-            chunkPosition.x = (worldBoundMax.x) * chunk_size;
+            chunkPosition.x = worldBoundMax.x;
+            chunkUpdated = true;
          }
-         else if(xdel < 0 and chunkPosition.x == worldBoundMax.x * chunk_size)
+         else if(xdel < 0 and chunkPosition.x == worldBoundMax.x)
          {
-            chunkPosition.x = (worldBoundMin.x) * chunk_size;
+            chunkPosition.x = worldBoundMin.x;
+            chunkUpdated = true;
          }
-         if(zdel > 0 and chunkPosition.z == worldBoundMin.z * chunk_size)
+         if(zdel > 0 and chunkPosition.z == worldBoundMin.z)
          {
-            chunkPosition.z = (worldBoundMax.z) * chunk_size;
+            chunkPosition.z = worldBoundMax.z;
+            chunkUpdated = true;
          }
-         else if(zdel < 0 and chunkPosition.z == worldBoundMax.z * chunk_size)
+         else if(zdel < 0 and chunkPosition.z == worldBoundMax.z)
          {
-            chunkPosition.z = (worldBoundMin.z) * chunk_size;
+            chunkPosition.z = worldBoundMin.z;
+            chunkUpdated = true;
          }
-         if(ydel > 0 and chunkPosition.y == worldBoundMin.y * chunk_size)
+         if(ydel > 0 and chunkPosition.y == worldBoundMin.y)
          {
-            chunkPosition.y = (worldBoundMax.y) * chunk_size;
+            chunkPosition.y = worldBoundMax.y;
          }
-         else if(ydel < 0 and chunkPosition.y == worldBoundMax.y * chunk_size)
+         else if(ydel < 0 and chunkPosition.y == worldBoundMax.y)
          {
-            chunkPosition.y = (worldBoundMin.y) * chunk_size;
+            chunkPosition.y = worldBoundMin.y;
          }
          (*i).second->setChunkPosition( chunkPosition.x, 
-                                 chunkPosition.y, 
-                                 chunkPosition.z);
+                                        chunkPosition.y, 
+                                        chunkPosition.z);
+         if(chunkUpdated and (*i).first.y == 0)
+         {
+            std::cout << "CPP: Pushed new region for loading." << std::endl;
+            //loadRegion(chunkPosition.x, chunkPosition.z);
+            region2DLoaderQueue.push_back((*i).second);
+         }
       }
       // Update the record of which chunk is currently occupied by the camera.
       worldCentre = camChunkPos;
@@ -326,21 +389,6 @@ glm::vec3 World::voxelCoordToChunkIndex(glm::vec3 coord)
    return glm::vec3(x,y,z);
 }
 
-
-// For the given chunk coord (world space) obtain the associated
-// chunk index for the render zone.
-vector3i World::chunkCoordToChunkIndex(vector3i coord)
-{
-   int x = coord.x % dim.x;
-   int y = coord.y % dim.y;
-   int z = coord.z % dim.z;
-   
-   x = x >= 0? x % dim.x : dim.x + (x % dim.x);
-   x = y >= 0? y % dim.y : dim.y + (y % dim.y);   
-   x = z >= 0? z % dim.z : dim.z + (z % dim.z);   
-   return vector3i(x,y,z);
-}
-
 /* Delete a spherical region of voxels about the world x,y,z co-ordinates
    with the specified radius. 
    Operates across multiple chunks if necessary
@@ -393,13 +441,17 @@ void World::modifyRegionAt(int x, int y, int z, byte val, int r)
 
 void World::chunkUpdateQuery()
 {
-   for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
+   // Process chunk loads before allowing updates.
+   if(region2DLoaderQueue.size() == 0)
    {
-      // Add all stale chunks to the chunk update queue.
-      if ((*i).second->requireMeshUpdate())
+      for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
-         (*i).second->initialiseMeshBuilder();
-         chunkUpdateQueue.push_back((*i).second);
+         // Add all stale chunks to the chunk update queue.
+         if ((*i).second->requireMeshUpdate())
+         {
+            (*i).second->initialiseMeshBuilder();
+            chunkUpdateQueue.push_back((*i).second);
+         }
       }
    }
 }
@@ -516,12 +568,12 @@ void World::random()
          {
             for (z = 0; z < chunk_size; z++)
             {
-               //for (y = 0; y < chunk_size; y++)
-               //{
+               if(cy == 0)
+               {
                   simplex = glm::simplex(glm::vec2((cx+x)/256.f,(cz+z)/256.f));
                   h = int(simplex * float(chunk_size));
                   (*i).second->setHeight(x,z,h);
-               //}
+               }
             }
          }
       }
@@ -531,6 +583,43 @@ void World::random()
 
 // Load or generate data for the chunk at coords x,y,z.
 // x,y,z are chunk coords in world space.
-//void World::loadChunk(int x, int y, int z)
-//{
-//   vector3i chunkIndex = 
+void World::loadRegion(int cx, int cz)
+{
+   vector3i chunkIndex = voxelCoordToChunkIndex(vector3i(cx,0,cz));
+   float simplex;
+   int x,z;
+   int h;
+   double fh;
+   std::vector<int> heightmap;
+   std::cout << "CPP: Generating and loading random 2D region..." << std::endl;
+   int64 time = GetTimeMs64();
+   // Clear this pillar of chunks (takes a few ms).
+   for(int y = 0; y < dim.y; y++)
+   {
+      chunkIndex.y = y;
+      chunks[chunkIndex]->empty();
+   }
+   std::cout << "CPP: ...data cleared(" << GetTimeMs64() - time << "ms)" << std::endl;
+   time = GetTimeMs64();
+   // Generate a 2D heightmap for this region.
+   for(z = 0; z < chunk_size; z++)
+   {
+      for(x = 0; x < chunk_size; x++)
+      {
+         // Simplex noise doesn't like negative coords, so mirror the world about 0,0,0.
+         fh = terrainGen->GetHeight(abs(cx+x)/256.f,abs(cz+z)/256.f);
+         fh = fh > 1.0f ? 1.0f : fh < 0.0f ? 0.0f : fh;
+         h = int((dim.y) * chunk_size * fh);
+         heightmap.push_back(h);
+         chunkIndex.y = 0;
+         while(h > 0)
+         {
+            chunks[chunkIndex]->setHeight(x,z,h);
+            chunkIndex.y++;
+            h-=chunk_size;
+         }
+      }
+   }
+   std::cout << "CPP: ...volumes loaded(" << GetTimeMs64() - time << "ms)" << std::endl;
+   //World::chunkUpdateQuery(); // Add modified chunks to the update queue. 
+}

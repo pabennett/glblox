@@ -68,8 +68,10 @@ pyglet.clock.ClockDisplay()
 wiremode = False
 
 # Set up the World (glblox Lib)
-chunk_size = 64
-yWrapping = True
+chunk_size = 32
+xWrap = True
+yWrap = False
+zWrap = True
 
 #Open a heightmap image
 im = Image.open('savelevels/world.png')
@@ -86,8 +88,9 @@ wz = im_height / chunk_size
 wy = int(im_max/chunk_size) + 1
 
 print "Created a world of " + str(wx) + "x" + str(wy) + "x" + str(wz) + " chunks..."
-world = World(wx, wy, wz, chunk_size, yWrapping)
-    
+world = World(wx, wy, wz, chunk_size,xWrap,yWrap,zWrap)
+#world = World(30,2,10,chunk_size,xWrap,yWrap,zWrap)
+
 world.loadHeightmap(data,chunk_size)
   
 #wx = 10
@@ -113,7 +116,7 @@ keys = key.KeyStateHandler()
 window.push_handlers(keys)
 # Key Hold Events
 def update(dt):
-    m = min(dt, 0.17)*40
+    m = min(dt, 0.17)*50
     if keys[key.W]:
         camera.move(0,0,m)
     elif keys[key.S]:
@@ -142,7 +145,7 @@ def volumeUpdates(dt):
         world.modifyRegionAt(position[0], position[1], position[2], 0, 12)
 
 clock.schedule_interval(statusUpdates, 0.2)
-#clock.schedule_interval_soft(volumeUpdates, 0.2)
+#clock.schedule_interval_soft(volumeUpdates, 0.1)
 
 # Set up the Mouse handler (pyglet)
 @window.event

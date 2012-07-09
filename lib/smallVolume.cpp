@@ -141,15 +141,50 @@ void smallVolume::set(int x, int y, int z, byte value)
    block element;
    if(value > 0)
    {
-      element.blockType = value;
-      volumeData[key] = element;
-      modified = true;
+      if(volumeData[key].blockType != value)
+      {
+         element.blockType = value;
+         volumeData[key] = element;
+         modified = true;
+      }
    }
    else if(is_solid(x,y,z))
    {
       volumeData.erase(key);
       modified = true;
    }
+}
+
+void smallVolume::yRangeSet(int x, int y0, int y1, int z, byte value)
+{
+   // If an invalid range is given don't proceed.
+   // Start index must be less than or equal to finish index.
+   // Start index and finish index must be greater or equal to 0
+   // Start index and finish index must be less than size
+   if(y0 > y1 or y0 < 0 or y1 < 0 or y0 >= size or y1 >= size)
+   {
+      std::cout << "CPP: A valid range must be specified (smallVolume::yRangeSet)" << std::endl;
+      return;
+   }
+   if(value == 0)
+   {
+      // Delete all values in the given range...
+      for(int y=y0; y<y1; y++)
+      {
+         Position key(x,y,z);
+         volumeData.erase(key);
+      }
+   }
+   else
+   {
+      // Set all values in the given range...
+      for(int y=y0; y<=y1; y++)
+      {
+         Position key(x,y,z);
+         volumeData[key].blockType = value;
+      }
+   }
+   modified = true;
 }
 
 bool smallVolume::is_empty()

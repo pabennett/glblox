@@ -4,6 +4,7 @@
 #include "chunk.cpp"    // Defines a chunk class which acts as a voxel container
                         // and provides utility functions for accessing or 
                         // modifying the data as well as rendering the data. 
+#include "perlin.cpp"
                         
 
            
@@ -15,9 +16,10 @@ class World
       std::vector<Chunk*> chunks2;                 // Array of chunks representing the world.
       std::vector<Chunk*> chunkUpdateQueue;        // Chunks that require a mesh update.
       std::vector<Chunk*> chunkOptimiseQueue;      // The queue of chunks that require mesh optimisation.
+      std::vector<Chunk*> region2DLoaderQueue;     // Queue for loading 2D regions.
    public:
       int vertices;                                // The number of vertices required to draw the world.
-      World(int, int, int, int, bool);             // Construct
+      World(int, int, int, int, bool, bool, bool); // Construct
       ~World();                                    // Destruct
       void draw(GLuint, glm::vec3, glm::mat4);     // Draw the world.
       void fillSpheres();                          // Fill the world with spheres.
@@ -32,6 +34,7 @@ class World
       void load(byte*, int, int, int, int);
       void loadHeightmap(byte*, int);
       void setViewDistance(int);                   // Set the viewing distance.
+      void loadRegion(int, int);                   // Load data for the given x,z region.
    private:
       vector3i voxelCoordToVoxelIndex(vector3i); // Translate world voxel coords to voxel indices (chunk space).
       vector3i voxelCoordToChunkIndex(vector3i); // Translate world voxel coords to chunk indices (world 'renderable zone' space).
@@ -44,5 +47,8 @@ class World
       glm::vec3 lastCamPosition;                   // The last known position of the camera.
       void camPositionCheck();                     // If the camera has moved into a new chunk we may need to draw a new part of the world.
       glm::vec3 worldCentre;                       // The chunk that is central in the world.
+      bool xWrappingEnabled;                       // The world is infinite in the x-axis.
       bool yWrappingEnabled;                       // The world is infinite in the y-axis.
+      bool zWrappingEnabled;                       // The world is infinite in the z-axis.
+      PerlinNoise* terrainGen;
 };

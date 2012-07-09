@@ -93,12 +93,13 @@ class Chunk
       bool meshBuildRunning();               // Test if the mesh builder is running.
       // Render the chunk.
       void draw(GLuint, glm::vec3, glm::mat4, int);  
-      void update(bool);                     // Update display buffers for the chunk.
+      void update(bool,int);                 // Update display buffers for the chunk.
       void setVisibleFaceGroup(glm::vec3);   // Move to world class when its created.
       void buildDisplayList();               // Build the display list vector.
       unsigned int voxelcount();             // Return the number of voxels contained in the chunk.
       void initDraw(GLuint);
       void setChunkPosition(int, int, int);  // Update the chunk world coords.
+      int meshGenWorkAllowance;              // The number of iterations per frame allowed for mesh generation.
    private:
       bool modified;                         // Flag to indicate the chunk data has been modified. 
       bool visible;                          // Flag to indicate if the chunk is visible.

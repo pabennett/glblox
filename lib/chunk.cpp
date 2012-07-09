@@ -209,10 +209,11 @@ unsigned int Chunk::voxelcount()
    return voxels;
 }
 
-void Chunk::update(bool useFastMeshBuilder)
+void Chunk::update(bool useFastMeshBuilder, int buildCycles)
 {
    // Iterate through the volume and generate a mesh.
    int64 time = GetTimeMs64();
+   meshGenWorkAllowance = buildCycles;
    if(!visible)
    {
       verticesLeft.clear();   
@@ -415,10 +416,7 @@ void Chunk::setHeight(int x, int z, int h)
    // Clamp height values.
    h = h >= dim.y ? dim.y - 1 : h;
    h = h < 0 ? 0 : h;
-   for(y = 0; y <= h; y++)
-   {
-      chunkData.set(x,y,z,1);
-   }
+   chunkData.yRangeSet(x,0,h,z,1);
    modified = chunkData.is_modified() or modified;
    visible = !chunkData.is_empty();
    chunkData.clearModifiedState();
@@ -441,7 +439,7 @@ void Chunk::initialiseMeshBuilder()
 
 bool Chunk::requireMeshUpdate()
 {
-   return not meshBuildInProgress and modified;
+   return not meshBuildInProgress and modified and visible;
 }
 
 bool Chunk::meshBuildRunning()
@@ -725,8 +723,8 @@ void Chunk::meshBuilderFast()
    // The mesh builder is only allowed to perform a certain amount of work
    // before it terminates and must be called again. This helps keep the frame
    // rate fluid but it does add latency to mesh updates.
-   for(int i = 0; i < 4096; i++)
-   {    
+   for(int i = 0; i < meshGenWorkAllowance; i++)
+   {
       if(ii==chunkData.end())
       {
          // Mesh generation complete.
@@ -744,7 +742,8 @@ void Chunk::meshBuilderFast()
       x = (*ii).first.tuple.get<0>();
       y = (*ii).first.tuple.get<1>();
       z = (*ii).first.tuple.get<2>();
-       
+            
+      // Check to see if the neighbours are empty and draw faces.
       if(chunkData.blockLeftVisible(x,y,z))
       {
          addFace(x, y, z, LEFT, 1);
@@ -774,7 +773,7 @@ void Chunk::meshBuilderFast()
       {
          addFace(x, y, z, FRONT, 1);
       }
-      ii++;
+      ++ii;
    }
 }
 
