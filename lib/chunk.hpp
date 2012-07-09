@@ -86,14 +86,14 @@ class Chunk
       void fill();                           // Completely fill the chunk with solid voxels.
       void empty();                          // Empty the chunk.   
       void meshBuilderSlow();                // Build an optimised mesh.
-      void meshBuilderFast();                // Build an unoptimised mesh.
+      int meshBuilderFast();                 // Build an unoptimised mesh.
       void initialiseMeshBuilder();          // Initialise the mesh builder.
       glm::vec3 position();                  // Get the chunk position.
       bool requireMeshUpdate();              // Test if the chunk mesh is out of date.
       bool meshBuildRunning();               // Test if the mesh builder is running.
       // Render the chunk.
       void draw(GLuint, glm::vec3, glm::mat4, int);  
-      void update(bool,int);                 // Update display buffers for the chunk.
+      int  update(bool,int);                 // Update display buffers for the chunk.
       void setVisibleFaceGroup(glm::vec3);   // Move to world class when its created.
       void buildDisplayList();               // Build the display list vector.
       unsigned int voxelcount();             // Return the number of voxels contained in the chunk.

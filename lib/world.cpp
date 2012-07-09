@@ -147,6 +147,7 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
 {
    int x,y,z;
    vertices = 0;
+   int workDone;
    lastCamPosition = camPosition;
    glm::vec3 pos;
    
@@ -179,13 +180,21 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
       if(chunkUpdateQueue.size() != 0)
       {
          // Use the fast mesh builder with 8000 work cycles.
-         chunkUpdateQueue.back()->update(true, 6000);
-         if(!chunkUpdateQueue.back()->meshBuildRunning())
+         workDone = 0;
+         while(workDone < 6000)
          {
-            // If the mesh for this chunk was sucessfully rebuilt remove it from
-            // the queue.
-            chunkUpdateQueue.pop_back();
-            std::cout << "CPP: Chunks awaiting update: " << chunkUpdateQueue.size() << std::endl;
+            if(chunkUpdateQueue.size() == 0)
+            {
+               break;
+            }
+            workDone += chunkUpdateQueue.back()->update(true, 6000);
+            if(!chunkUpdateQueue.back()->meshBuildRunning())
+            {
+               // If the mesh for this chunk was sucessfully rebuilt remove it from
+               // the queue.
+               chunkUpdateQueue.pop_back();
+               std::cout << "CPP: Chunks awaiting update: " << chunkUpdateQueue.size() << std::endl;
+            }
          }
       }
       
@@ -621,5 +630,4 @@ void World::loadRegion(int cx, int cz)
       }
    }
    std::cout << "CPP: ...volumes loaded(" << GetTimeMs64() - time << "ms)" << std::endl;
-   //World::chunkUpdateQuery(); // Add modified chunks to the update queue. 
 }

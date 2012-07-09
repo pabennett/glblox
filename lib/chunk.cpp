@@ -209,11 +209,12 @@ unsigned int Chunk::voxelcount()
    return voxels;
 }
 
-void Chunk::update(bool useFastMeshBuilder, int buildCycles)
+int Chunk::update(bool useFastMeshBuilder, int buildCycles)
 {
    // Iterate through the volume and generate a mesh.
    int64 time = GetTimeMs64();
    meshGenWorkAllowance = buildCycles;
+   int workDone = 1;
    if(!visible)
    {
       verticesLeft.clear();   
@@ -223,13 +224,12 @@ void Chunk::update(bool useFastMeshBuilder, int buildCycles)
       verticesFront.clear();
       verticesBack.clear();
       meshBuildInProgress = false;
-      return;
    }
    else
    {
       if(useFastMeshBuilder)
       {
-         meshBuilderFast();
+         workDone = meshBuilderFast();
       }
       else
       {
@@ -241,6 +241,7 @@ void Chunk::update(bool useFastMeshBuilder, int buildCycles)
          buildDisplayList();
       }
    }
+   return workDone;
    //std::cout << "CPP: Chunk mesh rebuild...(" << GetTimeMs64() - time << "ms)" << std::endl;
 }
 
@@ -676,7 +677,7 @@ void Chunk::meshBuilderSlow()
 
 // Generate a triangle mesh which can be used to represent
 // the voxel volume as a regular grid of cubes.
-void Chunk::meshBuilderFast()
+int Chunk::meshBuilderFast()
 {
    int x,y,z;              // Chunk x,y,z
    // Have the volume contents changed? Restart the mesh builder.
@@ -712,7 +713,7 @@ void Chunk::meshBuilderFast()
          verticesFront.swap(verticesFrontBuf);
          verticesBack.swap(verticesBackBuf);
          meshBuildInProgress = false;
-         return;
+         return 1;
       }
    }
 
@@ -736,7 +737,7 @@ void Chunk::meshBuilderFast()
          verticesBack.swap(verticesBackBuf);
          meshBuildInProgress = false;
          ii=chunkData.begin();
-         break;
+         return i;
       }
       // Get the voxel chunk coords.
       x = (*ii).first.tuple.get<0>();
@@ -775,6 +776,7 @@ void Chunk::meshBuilderFast()
       }
       ++ii;
    }
+   return meshGenWorkAllowance;
 }
 
 void Chunk::addFace2(int xmin, int xmax,
