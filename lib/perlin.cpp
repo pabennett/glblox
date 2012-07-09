@@ -1,4 +1,4 @@
-#include "PerlinNoise.h"
+#include "perlin.h"
 
 PerlinNoise::PerlinNoise()
 {
@@ -107,5 +107,5 @@ double PerlinNoise::Noise(int x, int y) const
     int n = x + y * 57;
     n = (n << 13) ^ n;
   int t = (n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff;
-    return 1.0 - double(t) * 0.931322574615478515625e-9;/// 1073741824.0);
+    return 1.0 - double(t) * 0.931322574615478515625e-9;
 }

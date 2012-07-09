@@ -1,3 +1,6 @@
+// Source: http://stackoverflow.com/questions/4753055/perlin-noise-generation-for-terrain
+// User: http://stackoverflow.com/users/314005/gamernb 
+
 class PerlinNoise
 {
 public:
