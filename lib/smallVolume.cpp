@@ -54,6 +54,8 @@ std::size_t hash_value(const Position &e)
   
 smallVolume::smallVolume(int sz)
 {
+   compressedFull = false;
+   compressedArb = false;
    size = sz;
    modified = false;
 }

@@ -68,6 +68,11 @@ World::~World()
    chunks.clear();
 }
 
+int World::chunksAwaitingUpdate()
+{
+   return chunkUpdateQueue.size();
+}
+
 // Test to see if the chunk at x,y,z (chunk coords) exists.
 bool World::exists(int x, int y, int z)
 {
@@ -171,7 +176,6 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
          pos = region2DLoaderQueue.back()->position();
          loadRegion(pos.x, pos.z);
          region2DLoaderQueue.pop_back();
-         std::cout << "CPP: Regions awaiting load: " << region2DLoaderQueue.size() << std::endl;
          if(region2DLoaderQueue.size() == 0)
          {
             chunkUpdateQuery();
@@ -183,13 +187,13 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
       // As chunks are modified, either by new regions of the world being loaded
       // or by the user, add them to the update queue and on each frame allow
       // a certain amount of work to be contributed towards mesh updates.
-      if(chunkUpdateQueue.size() != 0)
+      if(chunksAwaitingUpdate() != 0)
       {
          // Use the fast mesh builder with 8000 work cycles.
          workDone = 0;
          while(workDone < 6000)
          {
-            if(chunkUpdateQueue.size() == 0)
+            if(chunksAwaitingUpdate() == 0)
             {
                break;
             }
@@ -199,7 +203,6 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
                // If the mesh for this chunk was sucessfully rebuilt remove it from
                // the queue.
                chunkUpdateQueue.pop_back();
-               std::cout << "CPP: Chunks awaiting update: " << chunkUpdateQueue.size() << std::endl;
             }
          }
       }
@@ -644,7 +647,6 @@ void World::loadRegion(int cx, int cz)
       // then use the "fill" method to fill the chunk.
       if(heightmapTotals[y] == chunk_size * chunk_size * chunk_size)
       {
-         std::cout << "Filled chunk" << std::endl;
          chunks[chunkIndex]->fill();
       }
       // The chunk is not full so load the data manually from the heightmap.

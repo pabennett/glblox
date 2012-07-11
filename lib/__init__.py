@@ -85,6 +85,9 @@ WORLD_worldSetViewDistance = vol_lib.worldSetViewDistance
 WORLD_worldSetViewDistance.argtypes = c_void_p, c_int
 WORLD_worldSetRandomTerrainEnabledState = vol_lib.worldSetRandomTerrainEnabledState
 WORLD_worldSetRandomTerrainEnabledState.argtypes = c_void_p, c_bool
+#WORLD_worldChunksAwaitingUpdate = vol_lib.worldChunksAwaitingUpdate
+#WORLD_worldChunksAwaitingUpdate.argtypes = c_void_p,
+#WORLD_worldChunksAwaitingUpdate.restype = c_int       
        
 class World:
     def __init__(self,dimx,dimy,dimz,chunk_size,xWrap,yWrap,zWrap):
@@ -114,3 +117,5 @@ class World:
         vol_lib.worldSetViewDistance(self.obj, distance)
     def setRandomTerrainEnabledState(self, enabled):
         vol_lib.worldSetRandomTerrainEnabledState(self.obj, enabled)
+    def chunksAwaitingUpdate(self):
+        return vol_lib.worldChunksAwaitingUpdate(self.obj)

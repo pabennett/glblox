@@ -132,6 +132,11 @@ extern "C" {
       world->deleteBlockAt(x, y, z);
    }
    
+   int worldChunksAwaitingUpdate(World* world)
+   {
+      return world->chunksAwaitingUpdate();
+   }
+   
    void worldModifyRegionAt(World* world, int x, int y, int z, byte val, int radius)
    {
       world->modifyRegionAt(x, y, z, val, radius);

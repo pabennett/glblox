@@ -45,12 +45,10 @@ fps = pyglet.clock.ClockDisplay(color=(1,1,1,1),
 consoleObj = console.StatusConsole(x=window.width * 0.005, 
                              y=window.height * 0.98,
                              width=window.width)
- 
-consoleObj.addParameter('World Size')   
-consoleObj.addParameter('Chunk Size') 
-consoleObj.addParameter('Total Cubes')                  
+                  
 consoleObj.addParameter('Vertices')
 consoleObj.addParameter('Position')
+consoleObj.addParameter('Chunk updates')
                                                 
 renderingLabel = pyglet.text.Label("Tempstring", 
                           font_name='DejaVu Sans Mono',
@@ -106,11 +104,6 @@ camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
 camera.setPos((wx/2)*chunk_size,(wy/2)*chunk_size,(wz/2)*chunk_size)
 
-consoleObj.setParameter('World Size', (wx, wy, wz))  
-consoleObj.setParameter('Chunk Size', chunk_size) 
-consoleObj.setParameter('Total Cubes', wx * wy * wz * chunk_size)
-
-
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)
@@ -136,6 +129,7 @@ def statusUpdates(dt):
     position = tuple(int(a) for a in camera.getPos())
     consoleObj.setParameter('Vertices', world.numVertices())
     consoleObj.setParameter('Position', position)
+    consoleObj.setParameter('Chunk updates', world.chunksAwaitingUpdate())
 
 def volumeUpdates(dt):
     position = tuple(int(a) for a in camera.getPos())

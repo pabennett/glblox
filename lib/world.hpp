@@ -36,6 +36,7 @@ class World
       void setViewDistance(int);                   // Set the viewing distance.
       void loadRegion(int, int);                   // Load data for the given x,z region.
       void setRandomTerrainEnabledState(bool);     // Enable or disable random terrain wrapping.
+      int chunksAwaitingUpdate();                  // The number of stale chunks.
    private:
       vector3i voxelCoordToVoxelIndex(vector3i); // Translate world voxel coords to voxel indices (chunk space).
       vector3i voxelCoordToChunkIndex(vector3i); // Translate world voxel coords to chunk indices (world 'renderable zone' space).
