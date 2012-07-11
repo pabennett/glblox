@@ -16,26 +16,25 @@
 Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z, int chunk_size, int wh) : chunkData(chunk_size)
 {
    worldHeight = wh;
-   dim.x = chunk_size;
-   dim.y = chunk_size;
-   dim.z = chunk_size;
+   
+   Chunk::chunk_size = chunk_size;
    pos.x = chunk_x;
    pos.y = chunk_y;
    pos.z = chunk_z;
-   centre.x = pos.x + 0.5 * dim.x;
-   centre.y = pos.y + 0.5 * dim.y;
-   centre.z = pos.z + 0.5 * dim.z;
+   centre.x = pos.x + 0.5 * chunk_size;
+   centre.y = pos.y + 0.5 * chunk_size;
+   centre.z = pos.z + 0.5 * chunk_size;
    
    visibleFaceGroups.x = DRAW_BOTH_X;
    visibleFaceGroups.y = DRAW_BOTH_Y;
    visibleFaceGroups.z = DRAW_BOTH_Z;
    
-   std::cout << "CPP: Generating chunk with position " << pos.x << "," << pos.y << "," << pos.z << std::endl;
-   size = chunk_size;
+   std::cout << "CPP: Generating chunk with position " << pos.x << "," 
+                                                       << pos.y << "," 
+                                                       << pos.z << std::endl;
    modified = false;
    visible = false;
    meshBuildInProgress = false;
-   voxels = 0;
    // Init VBO
    glGenBuffers(1, &verticesFrontVBO);
    glGenBuffers(1, &verticesBackVBO);
@@ -58,16 +57,18 @@ void Chunk::setChunkPosition(int x, int y, int z)
    pos.x = x;
    pos.y = y;
    pos.z = z;
-   centre.x = pos.x + 0.5 * dim.x;
-   centre.y = pos.y + 0.5 * dim.y;
-   centre.z = pos.z + 0.5 * dim.z;
+   centre.x = pos.x + 0.5 * chunk_size;
+   centre.y = pos.y + 0.5 * chunk_size;
+   centre.z = pos.z + 0.5 * chunk_size;
 }
 
+// Get the chunk position.
 glm::vec3 Chunk::position()
 {
    return pos;
 }
 
+// Set which faces are visible (TODO: Move to World class)
 void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
 {  
 
@@ -86,7 +87,7 @@ void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
          rebuildDisplayList = true;
       }
    }
-   else if(cam.x > (pos.x + dim.x))
+   else if(cam.x > (pos.x + chunk_size))
    {
       verticesRenderedCount += verticesRight.size();
       if(visibleFaceGroups.x != DRAW_RIGHT)
@@ -114,7 +115,7 @@ void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
          rebuildDisplayList = true;
       }
    }
-   else if(cam.y > (pos.y + dim.y))
+   else if(cam.y > (pos.y + chunk_size))
    {
       verticesRenderedCount += verticesAbove.size();
       if(visibleFaceGroups.y != DRAW_ABOVE)
@@ -142,7 +143,7 @@ void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
          rebuildDisplayList = true;
       }
    }
-   else if(cam.z > (pos.z + dim.z))
+   else if(cam.z > (pos.z + chunk_size))
    {
       verticesRenderedCount += verticesFront.size();
       if(visibleFaceGroups.z != DRAW_FRONT)
@@ -168,9 +169,9 @@ void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
    }
 }
 
+// Bind the appropriate vertex arrays if they are visible and contain data.
 void Chunk::buildDisplayList()
 {
-   //
    if(!verticesFront.empty() and (visibleFaceGroups.z == DRAW_FRONT or visibleFaceGroups.z == DRAW_BOTH_Z))
    {
       glBindBuffer(GL_ARRAY_BUFFER, verticesFrontVBO);
@@ -204,11 +205,7 @@ void Chunk::buildDisplayList()
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-unsigned int Chunk::voxelcount()
-{
-   return voxels;
-}
-
+// Update the mesh to reflect volume changes.
 int Chunk::update(bool useFastMeshBuilder, int buildCycles)
 {
    // Iterate through the volume and generate a mesh.
@@ -227,14 +224,9 @@ int Chunk::update(bool useFastMeshBuilder, int buildCycles)
    }
    else
    {
-      if(useFastMeshBuilder)
-      {
-         workDone = meshBuilderFast();
-      }
-      else
-      {
-         meshBuilderSlow();
-      }
+
+      workDone = meshBuilderFast();
+
       // If the update completed this cycle rebuild the display list.
       if(!meshBuildInProgress)
       {
@@ -242,9 +234,15 @@ int Chunk::update(bool useFastMeshBuilder, int buildCycles)
       }
    }
    return workDone;
-   //std::cout << "CPP: Chunk mesh rebuild...(" << GetTimeMs64() - time << "ms)" << std::endl;
 }
 
+// Return the number of vertices in this chunk.
+int Chunk::getVertexCount()
+{
+   return verticesRenderedCount;
+}
+
+// Set up the openGL attributes.
 void Chunk::initDraw(GLuint program)
 {   
 	glUseProgram(program);
@@ -255,6 +253,7 @@ void Chunk::initDraw(GLuint program)
 	glUseProgram(0);
 }
 
+// Draw the chunk mesh.
 void Chunk::draw(GLuint program, 
                  glm::vec3 camPosition, 
                  glm::mat4 mvp, 
@@ -361,7 +360,8 @@ void Chunk::draw(GLuint program,
    glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glUseProgram(0);
 }
-  
+ 
+// Fill the chunk.
 void Chunk::fill()
 {
    chunkData.fill();
@@ -369,6 +369,7 @@ void Chunk::fill()
    visible = true;
 }
 
+// Empty the chunk
 void Chunk::empty()
 {
    chunkData.empty();
@@ -376,11 +377,13 @@ void Chunk::empty()
    visible = false;
 }
 
+// Find out if the chunk is compressed.
 bool Chunk::is_compressed()
 {
    return chunkData.is_compressed();
 }
 
+// Uncompress the chunk if it is compressed.
 void Chunk::uncompress()
 {
    if(is_compressed())
@@ -389,10 +392,11 @@ void Chunk::uncompress()
    }
 }
 
+// Load a 3D array of bytes into the chunk.
 void Chunk::load(byte* initialiser, int chunk_size)
 {
    int x,y,z;
-   if (chunk_size != size)
+   if (chunk_size != Chunk::chunk_size)
    {
       std::cout << "The data array does not match the chunk size! Aborting load." << std::endl;
    }
@@ -405,7 +409,8 @@ void Chunk::load(byte* initialiser, int chunk_size)
          {
             for (z = 0; z < chunk_size; z++)
             {
-               chunkData.set(x,y,z,initialiser[x + (y * size) + (z * size * size)]);
+               chunkData.set(x,y,z,initialiser[x + (y * chunk_size) + 
+                                              (z * chunk_size * chunk_size)]);
             }
          }
       }
@@ -415,6 +420,7 @@ void Chunk::load(byte* initialiser, int chunk_size)
    chunkData.clearModifiedState();
 }
 
+// Set an arbitrary voxel in the chunk.
 void Chunk::set(int x, int y, int z, byte initialiser)
 {
    chunkData.set(x,y,z,initialiser);
@@ -423,12 +429,18 @@ void Chunk::set(int x, int y, int z, byte initialiser)
    chunkData.clearModifiedState();
 }
 
+// Get the value of an arbitrary voxel in the chunk.
+byte Chunk::get(int x, int y, int z)
+{
+   return chunkData.get(x,y,z);
+}
+
 // Create a pillar of voxels at x,z with height h.
 void Chunk::setHeight(int x, int z, int h)
 {
    int y;
    // Clamp height values.
-   h = h >= dim.y ? dim.y - 1 : h;
+   h = h >= chunk_size ? chunk_size - 1 : h;
    if(h < 0)
    {
       return;
@@ -437,11 +449,6 @@ void Chunk::setHeight(int x, int z, int h)
    modified = chunkData.is_modified() or modified;
    visible = !chunkData.is_empty();
    chunkData.clearModifiedState();
-}
-
-byte Chunk::get(int x, int y, int z)
-{
-   return chunkData.get(x,y,z);
 }
 
 // Called by the higher level to indicate that the modified state of this chunk
@@ -454,11 +461,13 @@ void Chunk::initialiseMeshBuilder()
    meshBuildInProgress = true;
 }
 
+// Return true if the chunk is stale and requires a mesh rebuild.
 bool Chunk::requireMeshUpdate()
 {
    return not meshBuildInProgress and modified and visible;
 }
 
+// Return true if the mesh builder is running.
 bool Chunk::meshBuildRunning()
 {
    return meshBuildInProgress;
@@ -466,233 +475,7 @@ bool Chunk::meshBuildRunning()
 
 // Generate a triangle mesh which can be used to represent
 // the voxel volume as a regular grid of cubes.
-void Chunk::meshBuilderSlow()
-{
-   int x,y,z,i;              // Chunk x,y,z
-       
-   verticesLeft.clear();   // Clear any previous mesh data.
-   verticesRight.clear();
-   verticesAbove.clear();
-   verticesBelow.clear();
-   verticesFront.clear();
-   verticesBack.clear();
-   
-   int boundXMax, boundXMin;
-   int boundYMax, boundYMin;
-   int boundZMin, boundZMax;
-   int axis1, axis2, axis3;
-   int major_axis;
-   int sliceX, sliceY;
-   int rectX,rectY;
-   bool extend_x, extend_y;
-   bool tracing;
-   const facePos AXIS[] = {BACK, FRONT, RIGHT, LEFT, BELOW, ABOVE};
-   facePos facing;
-   
-   byte marker = 0;
-   
-   std::map<std::pair<int,int>, int> vismap;   
-            
-   // Loop through every voxel in the volume and create the vertices required
-   // to render exposed faces. Faces hidden by surrounding cubes are not drawn.
-   for(i = 0; i < 6; i++)
-   {
-      facing = AXIS[i];
-      for(major_axis = 0; major_axis < dim.z; major_axis++)
-      {
-         // Take successive 2D slices of the volume data over the major axis.
-         // Build a visibility map for the mesh builder to use.
-         vismap.clear();
-         switch (facing)
-         {
-            case ABOVE:
-               for(sliceY = 0; sliceY < dim.y; sliceY++)
-               {
-                  for(sliceX = 0; sliceX < dim.x; sliceX++)
-                  {
-                     // Check visibility.
-                     if(chunkData.is_solid(sliceX,major_axis,sliceY) and chunkData.blockAboveVisible(sliceX,major_axis,sliceY))
-                     {
-                        // Mark this cell as visible. The mesh gen will draw this cell
-                        vismap[std::make_pair(sliceX,sliceY)] = 1;
-                     }
-                  }
-               }
-               break;
-            case BELOW:
-               for(sliceY = 0; sliceY < dim.y; sliceY++)
-               {
-                  for(sliceX = 0; sliceX < dim.x; sliceX++)
-                  {
-                     // Check visibility.
-                     if(chunkData.is_solid(sliceX,major_axis,sliceY) and chunkData.blockBelowVisible(sliceX,major_axis,sliceY))
-                     {
-                        // Mark this cell as visible. The mesh gen will draw this cell
-                        vismap[std::make_pair(sliceX,sliceY)] = 1;
-                     }
-                  }
-               }
-               break;
-            case LEFT:
-               for(sliceY = 0; sliceY < dim.y; sliceY++)
-               {
-                  for(sliceX = 0; sliceX < dim.x; sliceX++)
-                  {
-                     // Check visibility.
-                     if(chunkData.is_solid(major_axis,sliceY,sliceX) and chunkData.blockLeftVisible(major_axis,sliceY,sliceX))
-                     {
-                        // Mark this cell as visible. The mesh gen will draw this cell
-                        vismap[std::make_pair(sliceX,sliceY)] = 1;
-                     }
-                  }
-               }
-               break;
-            case RIGHT:
-               for(sliceY = 0; sliceY < dim.y; sliceY++)
-               {
-                  for(sliceX = 0; sliceX < dim.x; sliceX++)
-                  {
-                     // Check visibility.
-                     if(chunkData.is_solid(major_axis,sliceY,sliceX) and chunkData.blockRightVisible(major_axis,sliceY,sliceX))
-                     {
-                        // Mark this cell as visible. The mesh gen will draw this cell
-                        vismap[std::make_pair(sliceX,sliceY)] = 1;
-                     }
-                  }
-               }
-               break;
-            case FRONT:
-               for(sliceY = 0; sliceY < dim.y; sliceY++)
-               {
-                  for(sliceX = 0; sliceX < dim.x; sliceX++)
-                  {
-                     // Check visibility.
-                     if(chunkData.is_solid(sliceX,sliceY,major_axis) and chunkData.blockFrontVisible(sliceX,sliceY,major_axis))
-                     {
-                        // Mark this cell as visible. The mesh gen will draw this cell
-                        vismap[std::make_pair(sliceX,sliceY)] = 1;
-                     }
-                  }
-               }
-               break;
-            case BACK:
-               for(sliceY = 0; sliceY < dim.y; sliceY++)
-               {
-                  for(sliceX = 0; sliceX < dim.x; sliceX++)
-                  {
-                     // Check visibility.
-                     if(chunkData.is_solid(sliceX,sliceY,major_axis) and chunkData.blockBackVisible(sliceX,sliceY,major_axis))
-                     {
-                        // Mark this cell as visible. The mesh gen will draw this cell
-                        vismap[std::make_pair(sliceX,sliceY)] = 1;
-                     }
-                  }
-               }
-               break;
-            default:
-               break;
-         }
-         // Now use the visibility map to create a mesh for this slice.
-         sliceX = 0;
-         sliceY = 0;
-         marker = 0;
-         tracing = false;
-         while ((sliceX < dim.x) or (sliceY < dim.y))
-         {
-            if (!tracing)
-            {
-               if (vismap[std::make_pair(sliceX,sliceY)] == 1)
-               {
-                  tracing = true;
-                  // Add the top left bounds of this rectangle.
-                  boundXMin = sliceX;
-                  boundYMin = sliceY;
-                  marker++;
-               }
-               else
-               {
-                  // Move to the next cell.
-                  sliceX = sliceX < dim.x?sliceX+1:0;
-                  sliceY = sliceX < dim.x?sliceY:sliceY+1;
-               }
-            }
-            else
-            {
-               extend_x = extend_y = false;
-               // Determine in which axis the rectangle can be expanded. 
-               // If we have expanded more in one axis than the other, prevent 
-               // further expansions in the lesser axis.
-               if((sliceY - boundYMin) >= (sliceX - boundXMin) and sliceY < dim.y)
-               {
-                  extend_y = true;
-                  for(rectX = boundXMin; rectX < sliceX+1; rectX++)
-                  {
-                     if (vismap[std::make_pair(rectX,sliceY+1)] != 1)
-                     {
-                        extend_y = false;
-                        break;
-                     }
-                  }
-               }
-               if((sliceX - boundXMin) >= (sliceY - boundYMin) and sliceX < dim.x)
-               {
-                  extend_x = true;
-                  for(rectY = boundYMin; rectY < sliceY+1; rectY++)
-                  {
-                     if (vismap[std::make_pair(sliceX+1,rectY)] != 1)
-                     {
-                        extend_x = false;
-                        break;
-                     }
-                  }
-               }
-               // Expand the rectangle if possible to do so.
-               if (extend_x and extend_y)
-               {
-                  sliceX++;
-                  sliceY++;
-               }
-               else if (extend_x)
-               {
-                  sliceX++;
-               }
-               else if (extend_y)
-               {
-                  sliceY++;
-               }
-               else
-               {
-                  // Further expansion is not possible. 
-                  boundXMax = sliceX;
-                  boundYMax = sliceY;
-                  boundZMin = boundZMax = major_axis;
-                  // Mark all cells encompassed by this rectangle as 'drawn':
-                  for(rectY = boundYMin; rectY < boundYMax + 1; rectY++)
-                  {
-                     for(rectX = boundXMin; rectX < boundXMax + 1; rectX++)
-                     {
-                        vismap.erase(std::make_pair(rectX,rectY));
-                     }
-                  }
-                  // Add the vertices required to draw this rectangle:
-                  addFace2( boundXMin, boundXMax, 
-                           boundYMin, boundYMax,
-                           boundZMin, boundZMax, 
-                           facing, marker);
-                  // Move sliceX and sliceY to top right of the rectangle:
-                  sliceY = boundXMax+1<dim.x?boundYMin:boundYMin+1;
-                  sliceX = boundXMax+1<dim.x?boundXMax+1:0;
-                  // Turn off tracing:
-                  tracing = false;
-               }
-            }
-         }
-      }
-   }
-}
-
-// Generate a triangle mesh which can be used to represent
-// the voxel volume as a regular grid of cubes.
+// Returns the number of iterations that were performed.
 int Chunk::meshBuilderFast()
 {
    int x,y,z;              // Chunk x,y,z
@@ -716,12 +499,12 @@ int Chunk::meshBuilderFast()
       if(chunkData.is_full())
       {
          // The chunk is full, create a primitive mesh and terminate mesh build.
-         addFace(0, 0, 0, LEFT, size);
-         addFace(0, 0, 0, RIGHT, size);
-         addFace(0, 0, 0, ABOVE, size);
-         addFace(0, 0, 0, BELOW, size);
-         addFace(0, 0, 0, BACK, size);
-         addFace(0, 0, 0, FRONT, size);
+         addFace(0, 0, 0, LEFT, chunk_size);
+         addFace(0, 0, 0, RIGHT, chunk_size);
+         addFace(0, 0, 0, ABOVE, chunk_size);
+         addFace(0, 0, 0, BELOW, chunk_size);
+         addFace(0, 0, 0, BACK, chunk_size);
+         addFace(0, 0, 0, FRONT, chunk_size);
          verticesLeft.swap(verticesLeftBuf);  
          verticesRight.swap(verticesRightBuf);
          verticesAbove.swap(verticesAboveBuf);
@@ -795,94 +578,25 @@ int Chunk::meshBuilderFast()
    return meshGenWorkAllowance;
 }
 
-void Chunk::addFace2(int xmin, int xmax,
-                        int ymin, int ymax,
-                        int zmin, int zmax,
-                        facePos facing, byte value
-                       )
-{
-   vertex vert;
-   switch (facing) 
-   {
-   case ABOVE:
-      // Add a new face.
-      std::swap(ymin,zmin); // Swap Y and Z for this axis configuration.
-      std::swap(ymax,zmax);
-      vert.y = ymax+1;
-      vert.w = value;
-      vert.x = xmax+1; vert.z = zmax+1; verticesAbove.push_back(vert); //B
-      vert.x = xmax+1; vert.z = zmin;   verticesAbove.push_back(vert); //C
-      vert.x = xmin;   vert.z = zmax+1; verticesAbove.push_back(vert); //A
-      vert.x = xmin;   vert.z = zmax+1; verticesAbove.push_back(vert); //A
-      vert.x = xmax+1; vert.z = zmin;   verticesAbove.push_back(vert); //C
-      vert.x = xmin;   vert.z = zmin;   verticesAbove.push_back(vert); //D
-      break;
-   case BELOW:
-      // Add a new face.
-      std::swap(ymin,zmin); // Swap Y and Z for this axis configuration.
-      std::swap(ymax,zmax);
-      vert.y = ymin;
-      vert.w = value;
-      vert.x = xmax+1; vert.z = zmax+1; verticesBelow.push_back(vert); //B
-      vert.x = xmin;   vert.z = zmax+1; verticesBelow.push_back(vert); //C
-      vert.x = xmax+1; vert.z = zmin;   verticesBelow.push_back(vert); //A
-      vert.x = xmax+1; vert.z = zmin;   verticesBelow.push_back(vert); //A
-      vert.x = xmin;   vert.z = zmax+1; verticesBelow.push_back(vert); //C
-      vert.x = xmin;   vert.z = zmin;   verticesBelow.push_back(vert); //D
-      break;
-   case LEFT:
-      // Add a new face.
-      std::swap(xmin,zmin); // Swap X and Z for this axis configuration.
-      std::swap(xmax,zmax);
-      vert.x = xmin;
-      vert.w = value;
-      vert.y = ymax+1; vert.z = zmax+1; verticesLeft.push_back(vert); //B
-      vert.y = ymax+1; vert.z = zmin;   verticesLeft.push_back(vert); //C
-      vert.y = ymin;   vert.z = zmax+1; verticesLeft.push_back(vert); //A
-      vert.y = ymin;   vert.z = zmax+1; verticesLeft.push_back(vert); //A
-      vert.y = ymax+1; vert.z = zmin;   verticesLeft.push_back(vert); //C
-      vert.y = ymin;   vert.z = zmin;   verticesLeft.push_back(vert); //D
-      break;
-   case RIGHT:
-      // Add a new face.
-      std::swap(xmin,zmin); // Swap X and Z for this axis configuration.
-      std::swap(xmax,zmax);
-      vert.x = xmax+1;
-      vert.w = value;
-      vert.y = ymax+1; vert.z = zmax+1; verticesRight.push_back(vert); //B
-      vert.y = ymin;   vert.z = zmax+1; verticesRight.push_back(vert); //C
-      vert.y = ymax+1; vert.z = zmin;   verticesRight.push_back(vert); //A
-      vert.y = ymax+1; vert.z = zmin;   verticesRight.push_back(vert); //A
-      vert.y = ymin;   vert.z = zmax+1; verticesRight.push_back(vert); //C
-      vert.y = ymin;   vert.z = zmin;   verticesRight.push_back(vert); //D
-      break;
-   case FRONT:
-      // Add a new face.
-      vert.z = zmax+1;
-      vert.w = value;
-      vert.x = xmax+1; vert.y = ymax+1; verticesFront.push_back(vert); //D
-      vert.x = xmin;   vert.y = ymax+1; verticesFront.push_back(vert); //A
-      vert.x = xmin;   vert.y = ymin;   verticesFront.push_back(vert); //B
-      vert.x = xmin;   vert.y = ymin;   verticesFront.push_back(vert); //B
-      vert.x = xmax+1; vert.y = ymin;   verticesFront.push_back(vert); //C
-      vert.x = xmax+1; vert.y = ymax+1; verticesFront.push_back(vert); //D
-      break;
-   case BACK:
-      // Add a new face.
-      vert.z = zmin;
-      vert.w = value;
-      vert.x = xmin;   vert.y = ymin;   verticesBack.push_back(vert); //D
-      vert.x = xmin;   vert.y = ymax+1; verticesBack.push_back(vert); //A
-      vert.x = xmax+1; vert.y = ymax+1; verticesBack.push_back(vert); //B
-      vert.x = xmax+1; vert.y = ymax+1; verticesBack.push_back(vert); //B
-      vert.x = xmax+1; vert.y = ymin;   verticesBack.push_back(vert); //C
-      vert.x = xmin;   vert.y = ymin;   verticesBack.push_back(vert); //D
-      break;
-   default:
-      break;
-   }
-}
-                                       
+// Create a cube face for the given voxel.
+
+/*           Above   Front
+               |     / 
+            +-------+ 
+           /|      /|
+          / |     / |
+ Left--  /  |    /  | --Right
+        +---|---+   | 
+        |  /+---|---+
+        | /     |  /
+        |/      | /
+ (x,y,z)o-------+/
+       /      | 
+    Back     Below
+    
+        |<----->|
+           size
+*/                                  
 void Chunk::addFace(int x, int y, int z, facePos facing, int size)
 {   
    vertex v;

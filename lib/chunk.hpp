@@ -5,7 +5,6 @@
 #include <GL/wglew.h>
 
 #include <iostream>
-#include <cstring>
 #include <new>
 #include <vector>
 #include <boost/unordered_map.hpp>
@@ -33,34 +32,55 @@ typedef struct{
 } vertex;
 
 class Chunk
-{
-   smallVolume chunkData;                    // Map of bytes representing voxel volume.
-         
-   faceGroup visibleFaceGroups;              // Which face groups are visible.
-   
-   vector3i dim;                             // The dimensions of the chunk
-   glm::vec3 pos;                            // The position of the chunk.
-   glm::vec3 centre;                         // The position of the chunk centre.
-   int size;                                 // The size of the volume.
-   int worldHeight;                          // The height of the world in voxels. 
-   
-   GLuint verticesFrontVBO;                  // Vertex Buffer Object for chunk faces.
-   GLuint verticesBackVBO;                   // Vertex Buffer Object for chunk faces.
-   GLuint verticesLeftVBO;                   // Vertex Buffer Object for chunk faces.
-   GLuint verticesRightVBO;                  // Vertex Buffer Object for chunk faces.
-   GLuint verticesAboveVBO;                  // Vertex Buffer Object for chunk faces.
-   GLuint verticesBelowVBO;                  // Vertex Buffer Object for chunk faces.
-   
-   GLuint normVBO;                           // Normals VBO for the chunk.
-   GLint posAttrib; 
-   GLuint normAttrib;
-   GLuint worldPosAttrib;
-   GLuint worldHeightAttrib;
-   unsigned int voxels;
-   
-   bool firstDrawCall;                       // Flag to enable one-time draw operations.
+{                      
+   public:      
+      // Construct
+      Chunk(int, int, int, int, int);        
+      // Destruct
+      ~Chunk();                              
+      // Load external data into the chunk.
+      void load(byte*, int);                 
+      // Get the value of a specific voxel.
+      byte get(int, int, int);           
+      // Set the value of a specific voxel.
+      void set(int, int, int, byte);         
+      void setHeight(int, int, int);
+      // Completely fill the chunk with solid voxels.
+      void fill();    
+      // Empty the chunk. 
+      void empty();   
+      // Initialise the mesh builder.
+      void initialiseMeshBuilder(); 
+      // Get the chunk position.      
+      glm::vec3 position(); 
+      // Test if the chunk mesh is out of date.      
+      bool requireMeshUpdate();    
+      // Test if the mesh builder is running.
+      bool meshBuildRunning();               
+      // Render the chunk.
+      void draw(GLuint, glm::vec3, glm::mat4,int);                        
+      // Update display buffers for the chunk - calls mesh gen.   
+      int update(bool,int);      
+      // TODO: Implement this in the world class...
+      void setVisibleFaceGroup(glm::vec3);   
+      // Build the display list vector.
+      void buildDisplayList();
+      // Init the attributes
+      void initDraw(GLuint);
+      // Update the chunk world coords.
+      void setChunkPosition(int, int, int);  
+      // Return true if the chunk is compressed.
+      bool is_compressed();     
+      // Uncompress the chunk data if it is compressed.
+      void uncompress();   
+      // Return the vertex count.
+      int getVertexCount();                  
+   private:
+      /* Variables */
       
-   public:
+      // Voxel Storage
+      smallVolume chunkData;                 // (boost::unordered_map)
+      // Vertex storage
       std::vector<vertex> verticesFront;     // Array of vertices: front faces.
       std::vector<vertex> verticesBack;      // Array of vertices: back faces.
       std::vector<vertex> verticesLeft;      // Array of vertices: left faces.
@@ -73,43 +93,38 @@ class Chunk
       std::vector<vertex> verticesRightBuf;  // Temp holding buffer.
       std::vector<vertex> verticesAboveBuf;  // Temp holding buffer.
       std::vector<vertex> verticesBelowBuf;  // Temp holding buffer.
-      
-      int verticesRenderedCount;             // The number of vertices rendered in this volume.
-   
-   
-      Chunk(int, int, int, int, int);        // Construct
-      ~Chunk();                              // Destruct
-      void load(byte*, int);                 // Load external data into the chunk.
-      byte get(int, int, int);               // Get the value of a specific voxel.
-      void set(int, int, int, byte);         // Set the value of a specific voxel.
-      void setHeight(int, int, int);
-      void fill();                           // Completely fill the chunk with solid voxels.
-      void empty();                          // Empty the chunk.   
-      void meshBuilderSlow();                // Build an optimised mesh.
-      int meshBuilderFast();                 // Build an unoptimised mesh.
-      void initialiseMeshBuilder();          // Initialise the mesh builder.
-      glm::vec3 position();                  // Get the chunk position.
-      bool requireMeshUpdate();              // Test if the chunk mesh is out of date.
-      bool meshBuildRunning();               // Test if the mesh builder is running.
-      // Render the chunk.
-      void draw(GLuint, glm::vec3, glm::mat4, int);  
-      int  update(bool,int);                 // Update display buffers for the chunk.
-      void setVisibleFaceGroup(glm::vec3);   // Move to world class when its created.
-      void buildDisplayList();               // Build the display list vector.
-      unsigned int voxelcount();             // Return the number of voxels contained in the chunk.
-      void initDraw(GLuint);
-      void setChunkPosition(int, int, int);  // Update the chunk world coords.
-      int meshGenWorkAllowance;              // The number of iterations per frame allowed for mesh generation.
-      bool is_compressed();                  // Return true if the chunk is compressed.
-      void uncompress();                     // Uncompress the chunk data if it is compressed.
-   private:
-      bool modified;                         // Flag to indicate the chunk data has been modified. 
-      bool visible;                          // Flag to indicate if the chunk is visible.
-      bool meshBuildInProgress;              // Flag to indicate if the mesh is out of date.
-
-      void addFace(int, int, int, facePos, int); // Specific to the positions array.
-      void addFace2(int, int, int, int, int, int,
-                   facePos, byte);              // Add a face to the vertex list.
-      // Iterator used by the mesh builder.
+      // OpenGL VBOS
+      GLuint verticesFrontVBO;               // VBO for chunk faces.
+      GLuint verticesBackVBO;                // VBO for chunk faces.
+      GLuint verticesLeftVBO;                // VBO for chunk faces.
+      GLuint verticesRightVBO;               // VBO for chunk faces.
+      GLuint verticesAboveVBO;               // VBO for chunk faces.
+      GLuint verticesBelowVBO;               // VBO for chunk faces.
+      // OpenGL Attributes
+      GLint posAttrib;
+      GLuint normAttrib;
+      GLuint worldPosAttrib;
+      GLuint worldHeightAttrib;
+      // Flags
+      bool modified;                         // Chunk data has been modified. 
+      bool visible;                          // Chunk is visible.
+      bool meshBuildInProgress;              // Mesh builder incomplete.
+      bool firstDrawCall;                    // Init draw flag.
+      faceGroup visibleFaceGroups;           // Which face groups are visible.
+      // Properties
+      int verticesRenderedCount;             // Number of vertices in chunk.
+      int chunk_size;                        // The volume dimensions (square).
+      int worldHeight;                       // World height (in voxels). 
+      glm::vec3 pos;                         // Position of the chunk.
+      glm::vec3 centre;                      // Position of the chunk centre.
+      int meshGenWorkAllowance;              // Iterations/frame for mesh gen.
+      // Iterators
       boost::unordered_map<Position, block>::iterator ii;
+      
+      /* Functions */
+      
+      // Add a voxel face to the temporary buffers (used by mesh builder).
+      void addFace(int, int, int, facePos, int); 
+      // Build an unoptimised mesh.
+      int meshBuilderFast(); 
 };

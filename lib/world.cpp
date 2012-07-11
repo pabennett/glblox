@@ -220,7 +220,7 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
          // Render the chunk. Cam is used for culling.
          (*i).second->draw(program, camPosition, mvp, worldViewDistance);
          // Update the vertex counter.
-         vertices += (*i).second->verticesRenderedCount;
+         vertices += (*i).second->getVertexCount();
       }
    }
 }
