@@ -425,7 +425,7 @@ void World::modifyRegionAt(int x, int y, int z, byte val, int r)
    int x_end = x + r;
    int y_end = y + r;
    int z_end = z + r;
-
+      
    if(!chunks.empty())
    {
       // For all voxels in the cubic region bounding the sphere radius r:
@@ -444,6 +444,7 @@ void World::modifyRegionAt(int x, int y, int z, byte val, int r)
                   // Delete the voxel.
                   if(exists(chunkIndex))
                   {
+                     chunks[chunkIndex]->uncompress();
                      chunks[chunkIndex]->set(voxelIndex.x,voxelIndex.y,voxelIndex.z,val);
                   }
                }
@@ -602,20 +603,18 @@ void World::loadRegion(int cx, int cz)
 {
    vector3i chunkIndex = voxelCoordToChunkIndex(vector3i(cx,0,cz));
    float simplex;
-   int x,z;
+   int x,y,z;
    int h;
    double fh;
    std::vector<int> heightmap;
-   std::cout << "CPP: Generating and loading random 2D region..." << std::endl;
-   int64 time = GetTimeMs64();
-   // Clear this pillar of chunks (takes a few ms).
-   for(int y = 0; y < dim.y; y++)
+   std::vector<int> heightmapTotals;
+   // Clear this pillar of chunks.
+   for(y = 0; y < dim.y; y++)
    {
       chunkIndex.y = y;
       chunks[chunkIndex]->empty();
+      heightmapTotals.push_back(0);
    }
-   std::cout << "CPP: ...data cleared(" << GetTimeMs64() - time << "ms)" << std::endl;
-   time = GetTimeMs64();
    // Generate a 2D heightmap for this region.
    for(z = 0; z < chunk_size; z++)
    {
@@ -626,14 +625,41 @@ void World::loadRegion(int cx, int cz)
          fh = fh > 1.0f ? 1.0f : fh < 0.0f ? 0.0f : fh;
          h = int((dim.y) * chunk_size * fh);
          heightmap.push_back(h);
-         chunkIndex.y = 0;
-         while(h > 0)
+         for(y = 0; y<dim.y; y++)
          {
-            chunks[chunkIndex]->setHeight(x,z,h);
-            chunkIndex.y++;
-            h-=chunk_size;
+            if(h <= 0)
+            {
+               break;
+            }
+            heightmapTotals[y] += std::min(chunk_size, h);
+            h -= chunk_size;
          }
       }
    }
-   std::cout << "CPP: ...volumes loaded(" << GetTimeMs64() - time << "ms)" << std::endl;
+   // Now load the heightmap into chunks.
+   for(y = 0; y<dim.y; y++)
+   {
+      chunkIndex.y = y;
+      // If the sum of the heightmap elements indicates that this chunk is full
+      // then use the "fill" method to fill the chunk.
+      if(heightmapTotals[y] == chunk_size * chunk_size * chunk_size)
+      {
+         std::cout << "Filled chunk" << std::endl;
+         chunks[chunkIndex]->fill();
+      }
+      // The chunk is not full so load the data manually from the heightmap.
+      else
+      {
+         for(z = 0; z < chunk_size; z++)
+         {
+            for(x = 0; x < chunk_size; x++)
+            {
+               h = heightmap[x + (z * chunk_size)];
+               h -= y * chunk_size;
+               chunks[chunkIndex]->setHeight(x,z,h);
+            }
+         }
+      }
+   }
+   heightmapTotals.clear();
 }

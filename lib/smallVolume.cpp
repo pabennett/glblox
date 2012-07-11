@@ -60,17 +60,8 @@ smallVolume::smallVolume(int sz)
 
 void smallVolume::fill()
 {
-   int x,y,z;
-   for(x = 0; x < size; x++)
-   {
-      for (y = 0; y < size; y++)
-      {
-         for (z = 0; z < size; z++)
-         {
-            set(x,y,z,1);
-         }
-      }
-   }
+   compressedFull = true;
+   volumeData.clear();
 }
 
 bool smallVolume::blockLeftVisible(int x, int y, int z)
@@ -105,6 +96,7 @@ bool smallVolume::blockBackVisible(int x, int y, int z)
 
 void smallVolume::empty()
 {
+   compressedFull = false;
    volumeData.clear();
 }
 
@@ -189,12 +181,36 @@ void smallVolume::yRangeSet(int x, int y0, int y1, int z, byte value)
 
 bool smallVolume::is_empty()
 {
-   return volumeData.empty();
+   return volumeData.empty() and not compressedFull;
 }
 
 bool smallVolume::is_modified()
 {
    return modified;
+}
+
+
+bool smallVolume::is_compressed()
+{
+   return compressedFull or compressedArb;
+}
+
+void smallVolume::uncompress()
+{
+   if(compressedFull)
+   {
+      for(int x = 0; x < size; x++)
+      {
+         for (int y = 0; y < size; y++)
+         {
+            for (int z = 0; z < size; z++)
+            {
+               set(x,y,z,1);
+            }
+         }
+      }
+      compressedFull = false;
+   }
 }
 
 // Clear the modified flag.
@@ -205,5 +221,5 @@ void smallVolume::clearModifiedState()
 
 bool smallVolume::is_full()
 {
-   return volumeData.size() == (size*size*size);
+   return compressedFull or volumeData.size() == (size*size*size);
 }

@@ -100,6 +100,8 @@ class Chunk
       void initDraw(GLuint);
       void setChunkPosition(int, int, int);  // Update the chunk world coords.
       int meshGenWorkAllowance;              // The number of iterations per frame allowed for mesh generation.
+      bool is_compressed();                  // Return true if the chunk is compressed.
+      void uncompress();                     // Uncompress the chunk data if it is compressed.
    private:
       bool modified;                         // Flag to indicate the chunk data has been modified. 
       bool visible;                          // Flag to indicate if the chunk is visible.

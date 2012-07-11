@@ -376,6 +376,19 @@ void Chunk::empty()
    visible = false;
 }
 
+bool Chunk::is_compressed()
+{
+   return chunkData.is_compressed();
+}
+
+void Chunk::uncompress()
+{
+   if(is_compressed())
+   {
+      chunkData.uncompress();
+   }
+}
+
 void Chunk::load(byte* initialiser, int chunk_size)
 {
    int x,y,z;
@@ -416,7 +429,10 @@ void Chunk::setHeight(int x, int z, int h)
    int y;
    // Clamp height values.
    h = h >= dim.y ? dim.y - 1 : h;
-   h = h < 0 ? 0 : h;
+   if(h < 0)
+   {
+      return;
+   }
    chunkData.yRangeSet(x,0,h,z,1);
    modified = chunkData.is_modified() or modified;
    visible = !chunkData.is_empty();

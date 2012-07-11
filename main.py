@@ -71,10 +71,10 @@ wiremode = False
 chunk_size = 32
 xWrap = True
 yWrap = False
-zWrap = True
+zWrap = False
 
 #Open a heightmap image
-im = Image.open('savelevels/world.gif')
+im = Image.open('savelevels/world.png')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -89,8 +89,7 @@ wy = int(im_max/chunk_size) + 1
 
 print "Created a world of " + str(wx) + "x" + str(wy) + "x" + str(wz) + " chunks..."
 world = World(wx, wy, wz, chunk_size,xWrap,yWrap,zWrap)
-#world = World(30,3,15,chunk_size,xWrap,yWrap,zWrap)
-
+#world = World(16,2,16,chunk_size,xWrap,yWrap,zWrap)
 world.loadHeightmap(data,chunk_size)
   
 #wx = 10
@@ -101,7 +100,7 @@ world.loadHeightmap(data,chunk_size)
 
 # Specify the world view distance in voxels
 world.setViewDistance(1000)
-world.setRandomTerrainEnabledState(False)
+world.setRandomTerrainEnabledState(True)
 # Create a camera object for viewing and displaying the world
 camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)

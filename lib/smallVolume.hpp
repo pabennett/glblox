@@ -17,6 +17,7 @@ class smallVolume
       bool is_modified();
       bool is_full();
       bool is_solid(int, int, int);
+      bool is_compressed();
       // Lookup
       byte get(int, int, int);
       bool blockLeftVisible(int, int, int);
@@ -31,11 +32,14 @@ class smallVolume
       void set(int, int, int, byte);
       void fill();
       void clearModifiedState();
+      void uncompress();
       // Iterators
       iterator begin() { return volumeData.begin(); }
       iterator end() { return volumeData.end(); }
    protected:
       int size;
       bool modified;
+      bool compressedFull;    // The volume is full and compressed.
+      bool compressedArb;     // The volume contains arbitrary data and is compressed.
       smallVolumeData volumeData;
 };
