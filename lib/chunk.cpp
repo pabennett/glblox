@@ -13,7 +13,10 @@
 
 #include "chunk.hpp"
 
-Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z, int chunk_size, int wh) : chunkData(chunk_size)
+Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z,
+             int chunk_size, 
+             int wh,
+             GLuint program) : chunkData(chunk_size)
 {
    worldHeight = wh;
    
@@ -42,8 +45,13 @@ Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z, int chunk_size, int wh) : ch
    glGenBuffers(1, &verticesRightVBO);
    glGenBuffers(1, &verticesAboveVBO);
    glGenBuffers(1, &verticesBelowVBO);
-   
-   firstDrawCall = true;
+   // Init attributes
+	glUseProgram(program);
+   posAttrib = glGetAttribLocation(program, "position");
+   normAttrib = glGetUniformLocation(program, "normal");
+   worldPosAttrib = glGetUniformLocation(program, "worldPosition");
+   worldHeightAttrib = glGetUniformLocation(program, "worldHeight");
+	glUseProgram(0);
 }
 
 Chunk::~Chunk()
@@ -248,17 +256,6 @@ int Chunk::getVertexCount()
    return verticesRenderedCount;
 }
 
-// Set up the openGL attributes.
-void Chunk::initDraw(GLuint program)
-{   
-	glUseProgram(program);
-   posAttrib = glGetAttribLocation(program, "position");
-   normAttrib = glGetUniformLocation(program, "normal");
-   worldPosAttrib = glGetUniformLocation(program, "worldPosition");
-   worldHeightAttrib = glGetUniformLocation(program, "worldHeight");
-	glUseProgram(0);
-}
-
 // Draw the chunk mesh.
 void Chunk::draw(GLuint program, 
                  glm::vec3 camPosition)
@@ -267,12 +264,6 @@ void Chunk::draw(GLuint program,
    if(!visible)
    {
       return;
-   }
-   // Set up the vertex buffers if this is the first draw call.
-   if(firstDrawCall)
-   {
-      firstDrawCall = false;
-      initDraw(program);
    }
          
 	glUseProgram(program);
@@ -464,7 +455,20 @@ int Chunk::meshBuilderFast()
       verticesBelowBuf.clear();
       verticesFrontBuf.clear();
       verticesBackBuf.clear();
-      // First check to see if the chunk is completely full.
+      // First check to see if this chunk is completely surrounded.
+      if(obscuredByChunkNeighbours())
+      {
+         // This chunk is obscured, dont draw it.
+         verticesLeft.clear();   
+         verticesRight.clear();
+         verticesAbove.clear();
+         verticesBelow.clear();
+         verticesFront.clear();
+         verticesBack.clear();
+         meshBuildInProgress = false;
+         return 1;
+      }
+      // Check to see if the chunk is completely full.
       if(chunkData.is_full())
       {
          // The chunk is full, create a primitive mesh and terminate mesh build.
@@ -513,32 +517,74 @@ int Chunk::meshBuilderFast()
       z = (*ii).first.tuple.get<2>();
             
       // Check to see if the neighbours are empty and draw faces.
-      if(chunkData.blockLeftVisible(x,y,z))
+      if(x > 0)
+      {
+         if(chunkData.blockLeftVisible(x,y,z))
+         {
+            addFace(x, y, z, LEFT, 1);
+         }
+      }
+      else if(not leftNeighbourIsSolid(chunk_size-1,y,z))
       {
          addFace(x, y, z, LEFT, 1);
       }
       
-      if(chunkData.blockRightVisible(x,y,z))
+      if(x < chunk_size - 1)
+      {
+         if(chunkData.blockRightVisible(x,y,z))
+         {
+            addFace(x, y, z, RIGHT, 1);
+         }
+      }
+      else if(not rightNeighbourIsSolid(0,y,z))
       {
          addFace(x, y, z, RIGHT, 1);
       }
       
-      if(chunkData.blockBelowVisible(x,y,z))
+      if(y > 0)
+      {
+         if(chunkData.blockBelowVisible(x,y,z))
+         {
+            addFace(x, y, z, BELOW, 1);
+         }
+      }
+      else if(not bottomNeighbourIsSolid(x,chunk_size-1,z))
       {
          addFace(x, y, z, BELOW, 1);
       }
-            
-      if(chunkData.blockAboveVisible(x,y,z))
+        
+      if(y < chunk_size - 1)
+      {
+         if(chunkData.blockAboveVisible(x,y,z))
+         {
+            addFace(x, y, z, ABOVE, 1);
+         }
+      }
+      else if(not topNeighbourIsSolid(x,0,z))
       {
          addFace(x, y, z, ABOVE, 1);
       }
       
-      if(chunkData.blockBackVisible(x,y,z))
+      if(z > 0)
+      {
+         if(chunkData.blockBackVisible(x,y,z))
+         {
+            addFace(x, y, z, BACK, 1);
+         }
+      }
+      else if(not backNeighbourIsSolid(x,y,chunk_size-1))
       {
          addFace(x, y, z, BACK, 1);
       }
       
-      if(chunkData.blockFrontVisible(x,y,z))
+      if(z < chunk_size - 1)
+      {
+         if(chunkData.blockFrontVisible(x,y,z))
+         {
+            addFace(x, y, z, FRONT, 1);
+         }
+      }
+      else if(not frontNeighbourIsSolid(x,y,0))
       {
          addFace(x, y, z, FRONT, 1);
       }
@@ -631,4 +677,152 @@ void Chunk::addFace(int x, int y, int z, facePos facing, int size)
    default:
       break;
    }
-}                        
+}             
+
+void Chunk::setLeftNeighbour(Chunk* neighbour)
+{
+   leftNeighbour = neighbour;
+}
+
+void Chunk::setRightNeighbour(Chunk* neighbour)
+{
+   rightNeighbour = neighbour;
+}
+
+void Chunk::setFrontNeighbour(Chunk* neighbour)
+{
+   frontNeighbour = neighbour;
+}
+
+void Chunk::setBackNeighbour(Chunk* neighbour)
+{
+   backNeighbour = neighbour;
+}
+
+void Chunk::setTopNeighbour(Chunk* neighbour)
+{
+   topNeighbour = neighbour;
+}
+
+void Chunk::setBottomNeighbour(Chunk* neighbour)
+{
+   bottomNeighbour = neighbour;
+}
+
+bool Chunk::rightBorderFull()
+{
+   return chunkData.rightBorderFull();
+}
+
+bool Chunk::leftBorderFull()
+{
+   return chunkData.leftBorderFull();
+}
+
+bool Chunk::topBorderFull()
+{
+   return chunkData.topBorderFull();
+}
+
+bool Chunk::bottomBorderFull()
+{
+   return chunkData.bottomBorderFull();
+}
+
+bool Chunk::frontBorderFull()
+{
+   return chunkData.frontBorderFull();
+}
+
+bool Chunk::backBorderFull()
+{
+   return chunkData.backBorderFull();
+}
+
+// Return true if this chunk is obscured by its neighbours.
+bool Chunk::obscuredByChunkNeighbours()
+{
+   // If any neighbours have null pointers then this chunk must be visible.
+   // (edge of world).
+   if(leftNeighbour == 0 or
+      rightNeighbour == 0 or
+      topNeighbour == 0 or
+      bottomNeighbour == 0 or
+      frontNeighbour == 0 or
+      backNeighbour == 0)
+   {
+      return false;
+   }
+   else
+   {
+      if(leftNeighbour->rightBorderFull() and
+         rightNeighbour->leftBorderFull() and
+         topNeighbour->bottomBorderFull() and
+         bottomNeighbour->topBorderFull() and
+         backNeighbour->frontBorderFull() and
+         frontNeighbour->backBorderFull())
+      {
+         return true;
+      }
+      return false;
+   }
+}
+
+bool Chunk::leftNeighbourIsSolid(int x, int y, int z)
+{
+   if(leftNeighbour != 0)
+   {
+      return leftNeighbour->is_solid(x,y,z);
+   }
+   return false;
+}
+
+bool Chunk::rightNeighbourIsSolid(int x, int y, int z)
+{
+   if(rightNeighbour != 0)
+   {
+      return rightNeighbour->is_solid(x,y,z);
+   }
+   return false;
+}
+
+bool Chunk::frontNeighbourIsSolid(int x, int y, int z)
+{
+   if(frontNeighbour != 0)
+   {
+      return frontNeighbour->is_solid(x,y,z);
+   }
+   return false;
+}
+
+bool Chunk::backNeighbourIsSolid(int x, int y, int z)
+{
+   if(backNeighbour != 0)
+   {
+      return backNeighbour->is_solid(x,y,z);
+   }
+   return false;
+}
+
+bool Chunk::topNeighbourIsSolid(int x, int y, int z)
+{
+   if(topNeighbour != 0)
+   {
+      return topNeighbour->is_solid(x,y,z);
+   }
+   return false;
+}
+
+bool Chunk::bottomNeighbourIsSolid(int x, int y, int z)
+{
+   if(bottomNeighbour != 0)
+   {
+      return bottomNeighbour->is_solid(x,y,z);
+   }
+   return false;
+}
+
+bool Chunk::is_solid(int x, int y, int z)
+{
+   return chunkData.is_solid(x,y,z);
+}

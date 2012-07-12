@@ -20,12 +20,18 @@ class smallVolume
       bool is_compressed();
       // Lookup
       byte get(int, int, int);
-      bool blockLeftVisible(int, int, int);
-      bool blockRightVisible(int, int, int);
-      bool blockAboveVisible(int, int, int);
-      bool blockBelowVisible(int, int, int);
-      bool blockFrontVisible(int, int, int);
-      bool blockBackVisible(int, int, int);
+      bool blockLeftVisible(int, int, int);        // Neighbour status checks.
+      bool blockRightVisible(int, int, int);       // Neighbour status checks.
+      bool blockAboveVisible(int, int, int);       // Neighbour status checks.
+      bool blockBelowVisible(int, int, int);       // Neighbour status checks.
+      bool blockFrontVisible(int, int, int);       // Neighbour status checks.
+      bool blockBackVisible(int, int, int);        // Neighbour status checks.
+      bool leftBorderFull();                       // Self border status.
+      bool rightBorderFull();                      // Chunk border status.
+      bool topBorderFull();                        // Chunk border status.
+      bool bottomBorderFull();                     // Chunk border status.
+      bool frontBorderFull();                      // Chunk border status.
+      bool backBorderFull();                       // Chunk border status.
       // Modification
       void yRangeSet(int, int, int, int, byte);
       void empty();

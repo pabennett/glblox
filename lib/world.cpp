@@ -16,7 +16,10 @@
 
 #include "world.hpp"
                                              
-World::World(int dimx, int dimy, int dimz, int size, bool xWrap, bool yWrap, bool zWrap)
+World::World(int dimx, int dimy, int dimz, 
+             int size, 
+             bool xWrap, bool yWrap, bool zWrap,
+             GLuint program)
 {
    // Chunk size must be power of 2
    if(!((size > 0) && ((size & (size - 1)) == 0)))
@@ -30,10 +33,11 @@ World::World(int dimx, int dimy, int dimz, int size, bool xWrap, bool yWrap, boo
    xWrappingEnabled = xWrap;
    yWrappingEnabled = yWrap;
    zWrappingEnabled = zWrap;
+   renderProgram = program;
    worldCentre = glm::vec3(int(dim.x/2), int(dim.y/2), int(dim.z/2));
    int x,y,z;
    vector3i pos;
-   vector3i key;
+   vector3i key, nkey;
    //PerlinNoise(double _persistence, double _frequency, double _amplitude, int _octaves, int _randomseed);
    double persistence = 1;
    double frequency = 5;
@@ -56,17 +60,79 @@ World::World(int dimx, int dimy, int dimz, int size, bool xWrap, bool yWrap, boo
             pos.x = x * chunk_size;
             pos.y = y * chunk_size;
             pos.z = z * chunk_size;
-            std::cout << "CPP: World: Generating chunk:" << pos.x << "," << pos.y << "," << pos.z << std::endl;
-            chunks[key] = new Chunk(pos.x, pos.y, pos.z, chunk_size, dim.y * chunk_size);
+            std::cout << "CPP: World: Generating chunk:" << pos.x << "," 
+                                                         << pos.y << "," 
+                                                         << pos.z << std::endl;
+            chunks[key] = new Chunk(pos.x, pos.y, pos.z, 
+                                    chunk_size, 
+                                    dim.y * chunk_size,
+                                    renderProgram);
          }
       }
    }
+   
+   // Provide each chunk with a set of pointers to its neighbours.
+   for (z = 0; z < dim.z; z++)
+   {
+      for (y = 0; y < dim.y; y++)
+      {
+         for (x = 0; x < dim.x; x++)
+         {
+            key.x = x;
+            key.y = y;
+            key.z = z;
+            
+            nkey = key;
+            if(x > 0)
+            {
+               nkey.x -= 1;
+               chunks[key]->setLeftNeighbour(chunks[nkey]);
+            }
+            
+            nkey = key;
+            if(x < dim.x - 1)
+            {
+               nkey.x += 1;
+               chunks[key]->setRightNeighbour(chunks[nkey]);
+            }
+            
+            nkey = key;
+            if(y > 0)
+            {
+               nkey.y -= 1;
+               chunks[key]->setBottomNeighbour(chunks[nkey]);
+            }
+            
+            nkey = key;
+            if(y < dim.y - 1)
+            {
+               nkey.y += 1;
+               chunks[key]->setTopNeighbour(chunks[nkey]);
+            }
+            
+            nkey = key;
+            if(z > 0)
+            {
+               nkey.z -= 1;
+               chunks[key]->setBackNeighbour(chunks[nkey]);
+            }
+            
+            nkey = key;
+            if(z < dim.z - 1)
+            {
+               nkey.z += 1;
+               chunks[key]->setFrontNeighbour(chunks[nkey]);
+            }
+         }
+      }
+   }
+            
 }
 
 World::~World()
 {
    chunks.clear();
-}
+}  
 
 int World::chunksAwaitingUpdate()
 {
@@ -154,7 +220,7 @@ void World::loadHeightmap(byte* data, int size)
 }
 
 // The main draw loop call
-void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
+void World::draw(glm::vec3 camPosition, glm::mat4 mvp)
 {
    int x,y,z;
    vertices = 0;
@@ -185,13 +251,11 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
             chunkUpdateQuery();
          }
       }
-      
       /* Volume Modification Step */
-      
       // As chunks are modified, either by new regions of the world being loaded
       // or by the user, add them to the update queue and on each frame allow
       // a certain amount of work to be contributed towards mesh updates.
-      if(chunksAwaitingUpdate() != 0)
+      else if(chunksAwaitingUpdate() != 0)
       {
          // Use the fast mesh builder with 8000 work cycles.
          workDone = 0;
@@ -259,10 +323,10 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
                // Frustrum has tolerance applied.
                continue;
             }
-            else
+            else if(not (*i).second->meshBuildRunning())
             {
                // Render the chunk. Cam is used for back-face culling.
-               (*i).second->draw(program, camPosition);
+               (*i).second->draw(renderProgram, camPosition);
                // Update the vertex counter.
                vertices += (*i).second->getVertexCount();
             }
@@ -280,6 +344,12 @@ void World::camPositionCheck()
 {
    glm::vec3 camChunkPos;
    camChunkPos = voxelCoordToChunkCoord(lastCamPosition);
+   if(worldCentre == camChunkPos)
+   {
+      // Nothing to do
+      // TODO: check for camera orientation changes for frustrum culling.
+      return;
+   }
    glm::vec3 chunkPosition;
    int xdel, ydel, zdel;
    bool chunkUpdated;

@@ -40,17 +40,19 @@ extern "C" {
                      float vertFOV, 
                      float frustrumNear, 
                      float frustrumFar,
-                     bool flightMode)
+                     bool flightMode,
+                     GLuint program)
    {
       return new Camera(width, 
                         height, 
                         vertFOV, 
                         frustrumNear, 
                         frustrumFar, 
-                        flightMode);
+                        flightMode,
+                        program);
    }
    
-   void C_setMVP(Camera* obj, GLuint location) { obj->setMVP(location);}
+   void C_setMVP(Camera* obj) { obj->setMVP();}
    
    void C_setPerspective(  Camera* obj, 
                            int w, 
@@ -92,14 +94,18 @@ extern "C" {
                    int chunk_size, 
                    bool xWrap,
                    bool yWrap,
-                   bool zWrap)
+                   bool zWrap,
+                   GLuint program)
    {
-      return new World(dimx, dimy, dimz, chunk_size, xWrap, yWrap, zWrap);
+      return new World(dimx, dimy, dimz, 
+                       chunk_size, 
+                       xWrap, yWrap, zWrap,
+                       program);
    }
    
-   void worldDraw(World* world, Camera* camera, GLuint program)
+   void worldDraw(World* world, Camera* camera)
    {
-      world->draw(program, camera->position, camera->mvp);
+      world->draw(camera->position, camera->mvp);
    }
    
    void worldFillSpheres(World* world)

@@ -9,9 +9,9 @@
 class World
 {
    public:
-      World(int, int, int, int, bool, bool, bool); // Construct
+      World(int, int, int, int, bool, bool, bool, GLuint); 
       ~World();                                    // Destruct
-      void draw(GLuint, glm::vec3, glm::mat4);     // Draw the world.
+      void draw(glm::vec3, glm::mat4);             // Draw the world.
       void fillSpheres();                          // Fill world with spheres.
       void fillPyramids();                         // Fill world with pyramids.
       void fill();                                 // Fill world.
@@ -51,6 +51,7 @@ class World
       bool zWrappingEnabled;                       // Infinite z-axis.
       PerlinNoise* terrainGen;                     // Random terrain generator.
       bool randomTerrainEnabled;                   // Enable random terrain.
+      GLuint renderProgram;                        // OpenGL shader program id.
       
       /* Functions */
       

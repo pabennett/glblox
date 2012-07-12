@@ -47,10 +47,10 @@ CAM_move = vol_lib.C_Move
 CAM_move.argtypes = c_void_p, c_float, c_float, c_float
        
 class Camera:
-    def __init__(self, width, height, vertFOV, frustrumNear, frustrumFar, flightMode):
-        self.obj = vol_lib.newCamera(width, height, vertFOV, frustrumNear, frustrumFar, flightMode)
-    def setMVP(self, location):
-        vol_lib.C_setMVP(self.obj, location)
+    def __init__(self, width, height, vertFOV, frustrumNear, frustrumFar, flightMode, program):
+        self.obj = vol_lib.newCamera(width, height, vertFOV, frustrumNear, frustrumFar, flightMode, program)
+    def setMVP(self):
+        vol_lib.C_setMVP(self.obj)
     def perspective(self, width, height, fov, fzn, fzf):
         vol_lib.C_setPerspective(self.obj, width, height, fov, fzn, fzf)
     def setPos(self, x, y ,z):
@@ -90,11 +90,11 @@ WORLD_worldSetRandomTerrainEnabledState.argtypes = c_void_p, c_bool
 #WORLD_worldChunksAwaitingUpdate.restype = c_int       
        
 class World:
-    def __init__(self,dimx,dimy,dimz,chunk_size,xWrap,yWrap,zWrap):
+    def __init__(self,dimx,dimy,dimz,chunk_size,xWrap,yWrap,zWrap,program):
         vol_lib.initGLEW()
-        self.obj = vol_lib.newWorld(dimx,dimy,dimz,chunk_size,xWrap,yWrap,zWrap)
-    def draw(self, program, camera):
-        vol_lib.worldDraw(self.obj, camera.obj, program)
+        self.obj = vol_lib.newWorld(dimx,dimy,dimz,chunk_size,xWrap,yWrap,zWrap,program)
+    def draw(self,camera):
+        vol_lib.worldDraw(self.obj, camera.obj)
     def fillSpheres(self):
         vol_lib.worldFillSpheres(self.obj)
     def fill(self):

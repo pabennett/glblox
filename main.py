@@ -66,13 +66,13 @@ pyglet.clock.ClockDisplay()
 wiremode = False
 
 # Set up the World (glblox Lib)
-chunk_size = 64
-xWrap = True
+chunk_size = 32
+xWrap = False
 yWrap = False
-zWrap = True
+zWrap = False
 
 #Open a heightmap image
-im = Image.open('savelevels/world.gif')
+im = Image.open('savelevels/world.png')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -86,8 +86,8 @@ wz = im_height / chunk_size
 wy = int(im_max/chunk_size) + 1
 
 print "Created a world of " + str(wx) + "x" + str(wy) + "x" + str(wz) + " chunks..."
-world = World(wx, wy, wz, chunk_size,xWrap,yWrap,zWrap)
-#world = World(64,2,4,chunk_size,xWrap,yWrap,zWrap)
+world = World(wx, wy, wz, chunk_size,xWrap,yWrap,zWrap,program.id)
+#world = World(64,3,34,chunk_size,xWrap,yWrap,zWrap,program.id)
 world.loadHeightmap(data,chunk_size)
   
 #wx = 10
@@ -97,10 +97,10 @@ world.loadHeightmap(data,chunk_size)
 #world.random()
 
 # Specify the world view distance in voxels
-world.setViewDistance(1000)
-world.setRandomTerrainEnabledState(False)
+world.setViewDistance(100000)
+world.setRandomTerrainEnabledState(True)
 # Create a camera object for viewing and displaying the world
-camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True)
+camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True, program.id)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
 camera.setPos((wx/2)*chunk_size,(wy/2)*chunk_size,(wz/2)*chunk_size)
 
@@ -151,14 +151,14 @@ def on_mouse_motion(x, y, dx, dy):
 def on_draw():
     window.clear()
     # Update camera
-    camera.setMVP(program.id)
+    camera.setMVP()
     # Wireframe Mode
     if keys[key.G]:
         glPolygonMode(GL_FRONT, GL_LINE)
     else:
         glPolygonMode(GL_FRONT, GL_FILL)
     # Draw World   
-    world.draw(program.id, camera)
+    world.draw(camera)
     # Show Console Data
     consoleObj.draw()
     # Show FPS       

@@ -35,13 +35,15 @@ class Chunk
 {                      
    public:      
       // Construct
-      Chunk(int, int, int, int, int);        
+      Chunk(int, int, int, int, int, GLuint);        
       // Destruct
       ~Chunk();                              
       // Load external data into the chunk.
       void load(byte*, int);                 
       // Get the value of a specific voxel.
-      byte get(int, int, int);           
+      byte get(int, int, int);  
+      // Return true if the given voxel is solid.
+      bool is_solid(int, int, int);
       // Set the value of a specific voxel.
       void set(int, int, int, byte);         
       void setHeight(int, int, int);
@@ -67,8 +69,6 @@ class Chunk
       void setVisibleFaceGroup(glm::vec3);   
       // Build the display list vector.
       void buildDisplayList();
-      // Init the attributes
-      void initDraw(GLuint);
       // Update the chunk world coords.
       void setChunkPosition(int, int, int);  
       // Return true if the chunk is compressed.
@@ -76,7 +76,26 @@ class Chunk
       // Uncompress the chunk data if it is compressed.
       void uncompress();   
       // Return the vertex count.
-      int getVertexCount();                  
+      int getVertexCount();   
+      // Set pointer to neighbour chunk.
+      void setLeftNeighbour(Chunk*);                  
+      void setRightNeighbour(Chunk*);                 
+      void setTopNeighbour(Chunk*);                   
+      void setBottomNeighbour(Chunk*);                
+      void setFrontNeighbour(Chunk*);                 
+      void setBackNeighbour(Chunk*);  
+      bool rightBorderFull();
+      bool leftBorderFull();
+      bool topBorderFull();
+      bool bottomBorderFull();
+      bool frontBorderFull();
+      bool backBorderFull();
+      bool leftNeighbourIsSolid(int, int, int);
+      bool rightNeighbourIsSolid(int, int, int);
+      bool topNeighbourIsSolid(int, int, int);
+      bool bottomNeighbourIsSolid(int, int, int);
+      bool frontNeighbourIsSolid(int, int, int);
+      bool backNeighbourIsSolid(int, int, int);
    private:
       /* Variables */
       
@@ -107,11 +126,17 @@ class Chunk
       GLuint normAttrib;
       GLuint worldPosAttrib;
       GLuint worldHeightAttrib;
+      // Neighbour chunk references
+      Chunk* leftNeighbour;                  // Pointer to neighbour chunk.
+      Chunk* rightNeighbour;                 // Pointer to neighbour chunk.
+      Chunk* topNeighbour;                   // Pointer to neighbour chunk.
+      Chunk* bottomNeighbour;                // Pointer to neighbour chunk.
+      Chunk* frontNeighbour;                 // Pointer to neighbour chunk.
+      Chunk* backNeighbour;                  // Pointer to neighbour chunk.
       // Flags
       bool modified;                         // Chunk data has been modified. 
       bool visible;                          // Chunk is visible.
       bool meshBuildInProgress;              // Mesh builder incomplete.
-      bool firstDrawCall;                    // Init draw flag.
       faceGroup visibleFaceGroups;           // Which face groups are visible.
       // Properties
       int verticesRenderedCount;             // Number of vertices in chunk.
@@ -129,4 +154,5 @@ class Chunk
       void addFace(int, int, int, facePos, int); 
       // Build an unoptimised mesh.
       int meshBuilderFast(); 
+      bool obscuredByChunkNeighbours();
 };

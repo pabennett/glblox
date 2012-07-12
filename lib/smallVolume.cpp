@@ -96,6 +96,121 @@ bool smallVolume::blockBackVisible(int x, int y, int z)
    return not(is_solid(x,y,z-1));
 }
 
+bool smallVolume::topBorderFull()
+{
+   if(!compressedFull)
+   {
+      int y = size-1;
+      for(int x = 0; x < size; x++)
+      {
+         for(int z = 0; z < size; z++)
+         {
+            if(!is_solid(x,y,z))
+            {
+               return false;
+            }
+         }
+      }
+   }
+   return true;
+}
+
+bool smallVolume::bottomBorderFull()
+{
+   if(!compressedFull)
+   {
+      int y = 0;
+      for(int x = 0; x < size; x++)
+      {
+         for(int z = 0; z < size; z++)
+         {
+            if(!is_solid(x,y,z))
+            {
+               return false;
+            }
+         }
+      }
+   }
+   return true;
+}
+
+bool smallVolume::rightBorderFull()
+{
+   if(!compressedFull)
+   {
+      int x = size-1;
+      for(int y = 0; y < size; y++)
+      {
+         for(int z = 0; z < size; z++)
+         {
+            if(!is_solid(x,y,z))
+            {
+               return false;
+            }
+         }
+      }
+   }
+   return true;
+}
+
+bool smallVolume::leftBorderFull()
+{
+   if(!compressedFull)
+   {
+      int x = 0;
+      for(int y = 0; y < size; y++)
+      {
+         for(int z = 0; z < size; z++)
+         {
+            if(!is_solid(x,y,z))
+            {
+               return false;
+            }
+         }
+      }
+   }
+   return true;
+}
+
+bool smallVolume::frontBorderFull()
+{
+   if(!compressedFull)
+   {
+      int z = size-1;
+      for(int x = 0; x < size; x++)
+      {
+         for(int y = 0; y < size; y++)
+         {
+            if(!is_solid(x,y,z))
+            {
+               return false;
+            }
+         }
+      }
+   }
+   return true;
+}
+
+
+bool smallVolume::backBorderFull()
+{
+   if(!compressedFull)
+   {
+      int z = 0;
+      for(int x = 0; x < size; x++)
+      {
+         for(int y = 0; y < size; y++)
+         {
+            if(!is_solid(x,y,z))
+            {
+               return false;
+            }
+         }
+      }
+   }
+   return true;
+}
+
 void smallVolume::empty()
 {
    compressedFull = false;
@@ -104,6 +219,10 @@ void smallVolume::empty()
 
 bool smallVolume::is_solid(int x, int y, int z) 
 {
+   if(compressedFull)
+   {
+      return true;
+   }
    Position key(x,y,z);
    return not (volumeData.find(key) == volumeData.end());
 }

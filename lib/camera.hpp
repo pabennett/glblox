@@ -44,9 +44,9 @@ class Camera
       glm::mat4 view;                     // The camera view matrix.
       glm::mat4 mvp;                      // The camera modelview projection matrix.
       glm::mat4 modelview;                // Modelview matrix.
-      Camera(int, int, float, float, float, bool);
+      Camera(int, int, float, float, float, bool, GLuint);
       void update(float);
-      void setMVP(GLuint);
+      void setMVP();
       void perspective(int, int, float, float, float); 
       void setPos(float, float, float);
       float getPosX();
@@ -59,4 +59,5 @@ class Camera
    private:
       glm::fquat fromAxisAngle(glm::vec3, float);
       void updateView();
+      GLuint renderProgram;
 };

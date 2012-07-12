@@ -19,8 +19,14 @@ const glm::vec3 WORLD_XAXIS = glm::vec3(1.0f, 0.0f, 0.0f);
 const glm::vec3 WORLD_YAXIS = glm::vec3(0.0f, 1.0f, 0.0f);
 const glm::vec3 WORLD_ZAXIS = glm::vec3(0.0f, 0.0f, 1.0f);
 
-Camera::Camera(int w, int h, float vertFOV, float frustrumNear, float frustrumFar, bool flightMode)
+Camera::Camera(int w, int h, 
+               float vertFOV, 
+               float frustrumNear, 
+               float frustrumFar, 
+               bool flightMode,
+               GLuint program)
 {
+   renderProgram = program;
    width = w<=0?1:w;
    height = h<=0?1:h;
    aspect = width / height;
@@ -77,11 +83,11 @@ float Camera::getPosZ()
 
 // Generates a projection matrix and view matrix and then
 // uploads the resulting modelview projection matrix to the mvp
-// uniform of the shader program passed as the argument.
-void Camera::setMVP(GLuint program)
+// uniform of the shader program
+void Camera::setMVP()
 {   
-	glUseProgram(program);
-   GLuint mvploc = glGetUniformLocation(program, "mvp");
+	glUseProgram(renderProgram);
+   GLuint mvploc = glGetUniformLocation(renderProgram, "mvp");
    glUniformMatrix4fv(mvploc, 1, GL_FALSE, glm::value_ptr(mvp));
    //GLuint modelViewLoc = glGetUniformLocation(program, "modelview");
    //glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelview));
