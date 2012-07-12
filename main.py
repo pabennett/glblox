@@ -66,13 +66,13 @@ pyglet.clock.ClockDisplay()
 wiremode = False
 
 # Set up the World (glblox Lib)
-chunk_size = 32
+chunk_size = 64
 xWrap = True
 yWrap = False
-zWrap = False
+zWrap = True
 
 #Open a heightmap image
-im = Image.open('savelevels/world.png')
+im = Image.open('savelevels/world.gif')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -87,7 +87,7 @@ wy = int(im_max/chunk_size) + 1
 
 print "Created a world of " + str(wx) + "x" + str(wy) + "x" + str(wz) + " chunks..."
 world = World(wx, wy, wz, chunk_size,xWrap,yWrap,zWrap)
-#world = World(16,2,16,chunk_size,xWrap,yWrap,zWrap)
+#world = World(64,2,4,chunk_size,xWrap,yWrap,zWrap)
 world.loadHeightmap(data,chunk_size)
   
 #wx = 10
@@ -98,7 +98,7 @@ world.loadHeightmap(data,chunk_size)
 
 # Specify the world view distance in voxels
 world.setViewDistance(1000)
-world.setRandomTerrainEnabledState(True)
+world.setRandomTerrainEnabledState(False)
 # Create a camera object for viewing and displaying the world
 camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
@@ -120,7 +120,7 @@ def update(dt):
         camera.move(m,0,0)
         
     if keys[key.T]:
-        world.fillSpheres()   
+        world.fill()   
         
 clock.schedule(update)         
 

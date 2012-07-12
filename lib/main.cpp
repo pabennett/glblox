@@ -144,7 +144,7 @@ extern "C" {
    
    int worldNumVertices(World* world)
    {
-      return world->vertices;
+      return world->getNumVertices();
    }
    void worldLoad(World* world, byte* data, int x, int y, int z, int chunk_size)
    {

@@ -68,6 +68,12 @@ glm::vec3 Chunk::position()
    return pos;
 }
 
+// Get the chunk centre.
+glm::vec3 Chunk::getCentre()
+{
+   return centre;
+}
+
 // Set which faces are visible (TODO: Move to World class)
 void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
 {  
@@ -255,9 +261,7 @@ void Chunk::initDraw(GLuint program)
 
 // Draw the chunk mesh.
 void Chunk::draw(GLuint program, 
-                 glm::vec3 camPosition, 
-                 glm::mat4 mvp, 
-                 int viewDistance)
+                 glm::vec3 camPosition)
 {
    // If there is nothing to draw then abort early.
    if(!visible)
@@ -270,42 +274,7 @@ void Chunk::draw(GLuint program,
       firstDrawCall = false;
       initDraw(program);
    }
-   
-   /* Frustrum Culling */
-   // http://en.wikibooks.org/wiki/OpenGL_Programming/Glescraft_5
-   
-   // Determine the clip space coords of the chunk centre.
-   glm::vec4 coords = mvp * glm::vec4(centre, 1);
-   coords.x /= coords.w;
-   coords.y /= coords.w;
-   
-   // Diameter of bounding sphere holding the chunk.
-   float diameter = sqrtf(centre.x*centre.x + centre.y*centre.y + centre.z*centre.z);
-   // How far away the chunk is from the camera.
-   float distance = glm::length(coords);
-   
-   // If the chunk has a negative Z in clip space then it is behind the camera.
-   if(coords.z < -diameter)
-   {
-      verticesRenderedCount = 0;
-      return;
-   }
-   
-   // If the chunk is out of the viewing distance dont draw it.
-   if(distance > viewDistance)
-   {
-      verticesRenderedCount = 0;
-      return;
-   }
-   
-   // If the chunk is outside the view frustrum plus a tolerance then dont draw.
-   diameter /= fabsf(coords.w);   
-   if(fabsf(coords.x) > 1 + diameter or fabsf(coords.y > 1 + diameter))
-   {
-      verticesRenderedCount = 0;
-      return;
-   }
-      
+         
 	glUseProgram(program);
    setVisibleFaceGroup(camPosition);
          

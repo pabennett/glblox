@@ -52,13 +52,15 @@ class Chunk
       // Initialise the mesh builder.
       void initialiseMeshBuilder(); 
       // Get the chunk position.      
-      glm::vec3 position(); 
+      glm::vec3 position();
+      // Get the chunk centre.
+      glm::vec3 getCentre();
       // Test if the chunk mesh is out of date.      
       bool requireMeshUpdate();    
       // Test if the mesh builder is running.
       bool meshBuildRunning();               
       // Render the chunk.
-      void draw(GLuint, glm::vec3, glm::mat4,int);                        
+      void draw(GLuint, glm::vec3);                        
       // Update display buffers for the chunk - calls mesh gen.   
       int update(bool,int);      
       // TODO: Implement this in the world class...

@@ -161,6 +161,10 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
    int workDone;
    lastCamPosition = camPosition;
    glm::vec3 pos;
+   glm::vec3 chunkCentre;
+   glm::vec4 chunkClipCoords;
+   float chunkDiameter;
+   float chunkDistance;
    
    if(!chunks.empty())
    {
@@ -217,12 +221,59 @@ void World::draw(GLuint program, glm::vec3 camPosition, glm::mat4 mvp)
       // Call draw on all chunks to render them.
       for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
-         // Render the chunk. Cam is used for culling.
-         (*i).second->draw(program, camPosition, mvp, worldViewDistance);
-         // Update the vertex counter.
-         vertices += (*i).second->getVertexCount();
+      
+         /* Frustrum culling & range checks */
+         
+         // Determine the clip space coords of the chunk centre.
+         chunkCentre = (*i).second->getCentre();
+         chunkClipCoords = mvp * glm::vec4(chunkCentre, 1);
+         chunkClipCoords.x /= chunkClipCoords.w;
+         chunkClipCoords.y /= chunkClipCoords.w;
+         
+         // Diameter of bounding sphere holding the chunk.
+         chunkDiameter = sqrtf(chunkCentre.x*chunkCentre.x + 
+                               chunkCentre.y*chunkCentre.y + 
+                               chunkCentre.z*chunkCentre.z);
+                               
+         // How far away the chunk is from the camera.
+         chunkDistance = glm::length(chunkClipCoords);
+         
+         // If the chunk has a negative Z in clip space then it is behind the camera.
+         if(chunkClipCoords.z < -chunkDiameter)
+         {
+            // Dont draw this chunk.
+            continue;
+         }
+         else if(chunkDistance > worldViewDistance)
+         {
+            // If the chunk is out of the viewing distance dont draw it.
+            continue;
+         }
+         else
+         {
+            chunkDiameter /= fabsf(chunkClipCoords.w);   
+            if(fabsf(chunkClipCoords.x) > 1 + chunkDiameter or 
+               fabsf(chunkClipCoords.y > 1 + chunkDiameter))
+            {
+               // If the chunk is outside the view frustrum then dont draw.
+               // Frustrum has tolerance applied.
+               continue;
+            }
+            else
+            {
+               // Render the chunk. Cam is used for back-face culling.
+               (*i).second->draw(program, camPosition);
+               // Update the vertex counter.
+               vertices += (*i).second->getVertexCount();
+            }
+         }
       }
    }
+}
+
+int World::getNumVertices()
+{
+   return vertices;
 }
 
 void World::camPositionCheck()
