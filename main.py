@@ -67,12 +67,12 @@ wiremode = False
 
 # Set up the World (glblox Lib)
 chunk_size = 32
-xWrap = False
+xWrap = True
 yWrap = False
-zWrap = False
+zWrap = True
 
 #Open a heightmap image
-im = Image.open('savelevels/world.png')
+im = Image.open('savelevels/world.gif')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -98,7 +98,7 @@ world.loadHeightmap(data,chunk_size)
 
 # Specify the world view distance in voxels
 world.setViewDistance(100000)
-world.setRandomTerrainEnabledState(True)
+world.setRandomTerrainEnabledState(False)
 # Create a camera object for viewing and displaying the world
 camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True, program.id)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)

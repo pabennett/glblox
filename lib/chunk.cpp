@@ -515,7 +515,6 @@ int Chunk::meshBuilderFast()
       x = (*ii).first.tuple.get<0>();
       y = (*ii).first.tuple.get<1>();
       z = (*ii).first.tuple.get<2>();
-            
       // Check to see if the neighbours are empty and draw faces.
       if(x > 0)
       {
@@ -770,7 +769,7 @@ bool Chunk::obscuredByChunkNeighbours()
 
 bool Chunk::leftNeighbourIsSolid(int x, int y, int z)
 {
-   if(leftNeighbour != 0)
+   if(leftNeighbour)
    {
       return leftNeighbour->is_solid(x,y,z);
    }
@@ -779,7 +778,7 @@ bool Chunk::leftNeighbourIsSolid(int x, int y, int z)
 
 bool Chunk::rightNeighbourIsSolid(int x, int y, int z)
 {
-   if(rightNeighbour != 0)
+   if(rightNeighbour)
    {
       return rightNeighbour->is_solid(x,y,z);
    }
@@ -788,7 +787,7 @@ bool Chunk::rightNeighbourIsSolid(int x, int y, int z)
 
 bool Chunk::frontNeighbourIsSolid(int x, int y, int z)
 {
-   if(frontNeighbour != 0)
+   if(frontNeighbour)
    {
       return frontNeighbour->is_solid(x,y,z);
    }
@@ -797,7 +796,7 @@ bool Chunk::frontNeighbourIsSolid(int x, int y, int z)
 
 bool Chunk::backNeighbourIsSolid(int x, int y, int z)
 {
-   if(backNeighbour != 0)
+   if(backNeighbour)
    {
       return backNeighbour->is_solid(x,y,z);
    }
@@ -806,7 +805,7 @@ bool Chunk::backNeighbourIsSolid(int x, int y, int z)
 
 bool Chunk::topNeighbourIsSolid(int x, int y, int z)
 {
-   if(topNeighbour != 0)
+   if(topNeighbour)
    {
       return topNeighbour->is_solid(x,y,z);
    }
@@ -815,7 +814,7 @@ bool Chunk::topNeighbourIsSolid(int x, int y, int z)
 
 bool Chunk::bottomNeighbourIsSolid(int x, int y, int z)
 {
-   if(bottomNeighbour != 0)
+   if(bottomNeighbour)
    {
       return bottomNeighbour->is_solid(x,y,z);
    }

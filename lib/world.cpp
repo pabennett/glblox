@@ -81,11 +81,22 @@ World::World(int dimx, int dimy, int dimz,
             key.x = x;
             key.y = y;
             key.z = z;
+            chunks[key]->setLeftNeighbour(NULL);
+            chunks[key]->setRightNeighbour(NULL);
+            chunks[key]->setTopNeighbour(NULL);
+            chunks[key]->setBottomNeighbour(NULL);
+            chunks[key]->setFrontNeighbour(NULL);
+            chunks[key]->setBackNeighbour(NULL);
             
             nkey = key;
             if(x > 0)
             {
                nkey.x -= 1;
+               chunks[key]->setLeftNeighbour(chunks[nkey]);
+            }
+            else if(xWrappingEnabled)
+            {
+               nkey.x = dim.x - 1;
                chunks[key]->setLeftNeighbour(chunks[nkey]);
             }
             
@@ -95,11 +106,21 @@ World::World(int dimx, int dimy, int dimz,
                nkey.x += 1;
                chunks[key]->setRightNeighbour(chunks[nkey]);
             }
+            else if(xWrappingEnabled)
+            {
+               nkey.x = 0;
+               chunks[key]->setRightNeighbour(chunks[nkey]);
+            }
             
             nkey = key;
             if(y > 0)
             {
                nkey.y -= 1;
+               chunks[key]->setBottomNeighbour(chunks[nkey]);
+            }
+            else if(yWrappingEnabled)
+            {
+               nkey.y = dim.y - 1;
                chunks[key]->setBottomNeighbour(chunks[nkey]);
             }
             
@@ -109,6 +130,11 @@ World::World(int dimx, int dimy, int dimz,
                nkey.y += 1;
                chunks[key]->setTopNeighbour(chunks[nkey]);
             }
+            else if(yWrappingEnabled)
+            {
+               nkey.y = 0;
+               chunks[key]->setTopNeighbour(chunks[nkey]);
+            }
             
             nkey = key;
             if(z > 0)
@@ -116,11 +142,21 @@ World::World(int dimx, int dimy, int dimz,
                nkey.z -= 1;
                chunks[key]->setBackNeighbour(chunks[nkey]);
             }
+            else if(zWrappingEnabled)
+            {
+               nkey.z = dim.z - 1;
+               chunks[key]->setBackNeighbour(chunks[nkey]);
+            }
             
             nkey = key;
             if(z < dim.z - 1)
             {
                nkey.z += 1;
+               chunks[key]->setFrontNeighbour(chunks[nkey]);
+            }
+            else if(zWrappingEnabled)
+            {
+               nkey.z = 0;
                chunks[key]->setFrontNeighbour(chunks[nkey]);
             }
          }
@@ -268,6 +304,7 @@ void World::draw(glm::vec3 camPosition, glm::mat4 mvp)
             workDone += chunkUpdateQueue.back()->update(true, 6000);
             if(!chunkUpdateQueue.back()->meshBuildRunning())
             {
+               glm::vec3 tpos = chunkUpdateQueue.back()->position();
                // If the mesh for this chunk was sucessfully rebuilt remove it from
                // the queue.
                chunkUpdateQueue.pop_back();
@@ -285,7 +322,6 @@ void World::draw(glm::vec3 camPosition, glm::mat4 mvp)
       // Call draw on all chunks to render them.
       for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
-      
          /* Frustrum culling & range checks */
          
          // Determine the clip space coords of the chunk centre.
