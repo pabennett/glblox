@@ -96,8 +96,6 @@ void Camera::setMVP()
 
 
 // Generates a quaternion from the given axis and rotation in degrees.
-// Maybe there is a constructor of the quaternion class that does
-// this for us automatically? TODO.
 glm::fquat Camera::fromAxisAngle(const glm::vec3 axis, float degrees)
 {
     float halfTheta = (degrees * (PI / 180.0f))  / 2.0f;
@@ -107,7 +105,7 @@ glm::fquat Camera::fromAxisAngle(const glm::vec3 axis, float degrees)
 
 // Orientates the camera by applying the given pitch and yaw values
 // in degrees to the camera's current orientation.
-void Camera::orient(float pitch , float yaw)
+glm::fquat Camera::orient(float pitch , float yaw)
 {
    glm::fquat rotation;
    // Apply the x-axis delta to the quaternion.
@@ -133,10 +131,11 @@ void Camera::orient(float pitch , float yaw)
    }
    
    updateView();
+   return orientation;
 }
 
 // Moves the camera by the specified x, y, z values.
-void Camera::move(float dx, float dy, float dz)
+glm::vec3 Camera::move(float dx, float dy, float dz)
 {
    if (flight_mode)
    {
@@ -156,6 +155,7 @@ void Camera::move(float dx, float dy, float dz)
    }
    
    updateView();
+   return position;
 }
 
 void Camera::updateView()

@@ -20,6 +20,7 @@
 #include "world.cpp"    // A class describing a collection of chunks.
                         // Provides high level access to the chunk data.
 #include "camera.cpp"   // Provides a quaternion based first person camera ,
+#include "player.cpp"   // Provides a player character.
                         
 extern "C" {
 
@@ -34,6 +35,50 @@ extern "C" {
       std::cout << "CPP: GLEW Initialised." << std::endl;
    }
    
+   // Player
+   Player* newPlayer(float x,
+                     float y,
+                     float z,
+                     Camera* camera)
+   {
+      return new Player(x,y,z,camera);
+   }
+   
+   void playerMove(Player* obj,
+                   float dx,
+                   float dy,
+                   float dz)
+   {
+      obj->move(dx, dy, dz);
+   }
+   
+   void playerOrient(Player* obj,
+                     float pitch,
+                     float yaw)
+   {
+      obj->orient(pitch, yaw);
+   }
+   
+   void playerSetCamMVP(Player* obj)
+   {
+      obj->setCameraMVP();
+   }
+   
+   float playerGetPosX(Player* obj)
+   {
+      return obj->getPositionX();
+   }
+   
+   float playerGetPosY(Player* obj)
+   {
+      return obj->getPositionY();
+   }
+   
+   float playerGetPosZ(Player* obj)
+   {
+      return obj->getPositionZ();
+   }
+      
    // Camera
    Camera* newCamera(int width, 
                      int height, 
@@ -103,9 +148,9 @@ extern "C" {
                        program);
    }
    
-   void worldDraw(World* world, Camera* camera)
+   void worldDraw(World* world, Player* player)
    {
-      world->draw(camera->position, camera->mvp);
+      world->draw(player->getPosition(), player->getPlayerCamMVP());
    }
    
    void worldFillSpheres(World* world)

@@ -22,7 +22,7 @@ from pyglet.window import key
 from pyglet import clock
 from pyglet import font
 
-from lib import Camera, World
+from lib import Camera, World, Player
 
 import Image
 import numpy as np
@@ -72,7 +72,7 @@ yWrap = False
 zWrap = True
 
 #Open a heightmap image
-im = Image.open('savelevels/world.gif')
+im = Image.open('savelevels/world.png')
 # Convert image to greyscale
 im = im.convert("L")
 # Get the dimensions of the image
@@ -102,7 +102,7 @@ world.setRandomTerrainEnabledState(False)
 # Create a camera object for viewing and displaying the world
 camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True, program.id)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
-camera.setPos((wx/2)*chunk_size,(wy/2)*chunk_size,(wz/2)*chunk_size)
+player = Player((wx/2)*chunk_size,(wy/2)*chunk_size,(wz/2)*chunk_size, camera)
 
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
@@ -111,13 +111,13 @@ window.push_handlers(keys)
 def update(dt):
     m = min(dt, 0.17)*50
     if keys[key.W]:
-        camera.move(0,0,m)
+        player.move(0,0,m)
     elif keys[key.S]:
-        camera.move(0,0,-m)
+        player.move(0,0,-m)
     if keys[key.A]:
-        camera.move(-m,0,0)
+        player.move(-m,0,0)
     elif keys[key.D]:
-        camera.move(m,0,0)
+        player.move(m,0,0)
         
     if keys[key.T]:
         world.fill()   
@@ -126,13 +126,13 @@ clock.schedule(update)
 
 
 def statusUpdates(dt):
-    position = tuple(int(a) for a in camera.getPos())
+    position = tuple(int(a) for a in player.getPos())
     consoleObj.setParameter('Vertices', world.numVertices())
     consoleObj.setParameter('Position', position)
     consoleObj.setParameter('Chunk updates', world.chunksAwaitingUpdate())
 
 def volumeUpdates(dt):
-    position = tuple(int(a) for a in camera.getPos())
+    position = tuple(int(a) for a in player.getPos())
     if keys[key.SPACE]:
         world.modifyRegionAt(position[0], position[1], position[2], 1, 4)
     else:
@@ -144,21 +144,21 @@ clock.schedule_interval_soft(volumeUpdates, 0.1)
 # Set up the Mouse handler (pyglet)
 @window.event
 def on_mouse_motion(x, y, dx, dy):
-    camera.orient(dx*0.08, -dy*0.08)
+    player.orient(dx*0.08, -dy*0.08)
     
 # MAIN RENDER LOOP
 @window.event
 def on_draw():
     window.clear()
     # Update camera
-    camera.setMVP()
+    player.setCameraMVP()
     # Wireframe Mode
     if keys[key.G]:
         glPolygonMode(GL_FRONT, GL_LINE)
     else:
         glPolygonMode(GL_FRONT, GL_FILL)
     # Draw World   
-    world.draw(camera)
+    world.draw(player)
     # Show Console Data
     consoleObj.draw()
     # Show FPS       

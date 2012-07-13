@@ -52,8 +52,8 @@ class Camera
       float getPosX();
       float getPosY();
       float getPosZ();
-      void orient(float, float);
-      void move(float, float, float);
+      glm::fquat orient(float, float);
+      glm::vec3 move(float, float, float);
       bool visibleY();
       bool visibleZ();
    private:

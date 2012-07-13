@@ -119,3 +119,34 @@ class World:
         vol_lib.worldSetRandomTerrainEnabledState(self.obj, enabled)
     def chunksAwaitingUpdate(self):
         return vol_lib.worldChunksAwaitingUpdate(self.obj)
+    
+PLAYER_orient = vol_lib.playerOrient
+PLAYER_orient.argtypes = c_void_p, c_float, c_float, 
+PLAYER_move = vol_lib.playerMove
+PLAYER_move.argtypes = c_void_p, c_float, c_float, c_float
+PLAYER_newPlayer = vol_lib.newPlayer
+PLAYER_newPlayer.argtypes = c_float, c_float, c_float, c_void_p
+PLAYER_getPosX = vol_lib.playerGetPosX
+PLAYER_getPosX.restype = c_float
+PLAYER_getPosX.argtypes = c_void_p,
+PLAYER_getPosY = vol_lib.playerGetPosY
+PLAYER_getPosY.argtypes = c_void_p,
+PLAYER_getPosY.restype = c_float
+PLAYER_getPosZ = vol_lib.playerGetPosZ
+PLAYER_getPosZ.restype = c_float
+PLAYER_getPosZ.argtypes = c_void_p,
+  
+class Player:
+    def __init__(self, x, y, z, camera):
+        self.obj = vol_lib.newPlayer(x, y, z, camera.obj)
+    def move(self, dx, dy, dz):
+        vol_lib.playerMove(self.obj, dx, dy, dz)
+    def orient(self, pitch, yaw):
+        vol_lib.playerOrient(self.obj, pitch, yaw)
+    def getPos(self):
+        x = vol_lib.playerGetPosX(self.obj)
+        y = vol_lib.playerGetPosY(self.obj)
+        z = vol_lib.playerGetPosZ(self.obj)
+        return (x,y,z)
+    def setCameraMVP(self):
+        vol_lib.playerSetCamMVP(self.obj)

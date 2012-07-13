@@ -167,6 +167,10 @@ World::World(int dimx, int dimy, int dimz,
 
 World::~World()
 {
+   for(std::map<vector3i,Chunk*>::iterator ii = chunks.begin(); ii != chunks.end(); ++ii)
+   {
+      (*ii).second->empty();
+   }
    chunks.clear();
 }  
 
