@@ -29,6 +29,9 @@ class World
       // Delete a spherical region of voxels at the
       // specified world coord with the specified radius.
       void modifyRegionAt(int, int, int, byte, int);  
+      vector3i worldDimensions();                  // Get the world dimensions.
+      int worldChunkSize();                        // Get the world chunk size.
+      bool is_solid(int,int,int);                  // Voxel at x,y,z is solid.
    private:
       /* Variables */
       

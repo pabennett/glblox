@@ -160,6 +160,39 @@ glm::vec3 Camera::move(float dx, float dy, float dz)
 
 void Camera::updateView()
 {
+   /* View Matrix Format:
+   
+   +---+---+---+---+
+   | A | B | C | D | 
+   +---+---+---+---+
+   | E | F | G | H |
+   +---+---+---+---+
+   | I | J | K | L |
+   +---+---+---+---+
+   | M | N | O | P |
+   +---+---+---+---+
+   
+             +---+
+   XAXIS --> |ABC|                       +---+ 
+   YAXIS --> |EFG| = Scale and Rotation. |MNO| = Translation
+   ZAXIS --> |IJK|                       +---+
+             +---+   
+   
+   M = -dot(XAXIS,eye), N = -dot(YAXIS,eye), O = -dot(ZAXIS,eye)   eye=position
+   
+   Construct view matrix from rotation quaternion and position/eye:
+   
+   view =  glm::mat4_cast(orientation);
+   XAXIS = (view[0,0], view[0,1], view[0,2])
+   YAXIS = (view[1,0], view[1,1], view[1,2])
+   ZAXIS = (view[2,0], view[2,1], view[2,2])
+   
+   view[3,0] = -glm::dot(XAXIS, position);
+   view[3,1] = -glm::dot(YAXIS, position);
+   view[3,2] = -glm::dot(ZAXIS, position);
+   
+   */
+   
    // Reconstruct the view matrix.
    view = glm::mat4_cast(orientation);
    
@@ -184,3 +217,19 @@ void Camera::updateView()
    //std::cout << "CPP: Cam posx = " << position.x << std::endl;
    //std::cout << "CPP: Camera: Forward = " << forward.x << "," << forward.y << "," << forward.z << std::endl;
 }
+
+glm::vec3 Camera::getCameraUp()
+{
+   return m_yaxis;
+}
+
+glm::vec3 Camera::getCameraRight()
+{
+   return m_xaxis;
+}
+
+glm::vec3 Camera::getCameraForward()
+{
+   return -m_zaxis;
+}
+

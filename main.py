@@ -48,6 +48,7 @@ consoleObj = console.StatusConsole(x=window.width * 0.005,
                   
 consoleObj.addParameter('Vertices')
 consoleObj.addParameter('Position')
+consoleObj.addParameter('Velocity')
 consoleObj.addParameter('Chunk updates')
                                                 
 renderingLabel = pyglet.text.Label("Tempstring", 
@@ -102,7 +103,7 @@ world.setRandomTerrainEnabledState(False)
 # Create a camera object for viewing and displaying the world
 camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True, program.id)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
-player = Player((wx/2)*chunk_size,(wy/2)*chunk_size,(wz/2)*chunk_size, camera)
+player = Player(camera, world)
 
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
@@ -111,32 +112,40 @@ window.push_handlers(keys)
 def update(dt):
     m = min(dt, 0.17)*50
     if keys[key.W]:
-        player.move(0,0,m)
+        #player.move(0,0,m)
+        player.update(dt,True,False,False,False)
     elif keys[key.S]:
-        player.move(0,0,-m)
+        #player.move(0,0,-m)
+        player.update(dt,False,True,False,False)
     if keys[key.A]:
-        player.move(-m,0,0)
+        #player.move(-m,0,0)
+        player.update(dt,False,False,True,False)
     elif keys[key.D]:
-        player.move(m,0,0)
+        #player.move(m,0,0)
+        player.update(dt,False,False,False,True)
+    else:
+        player.update(dt,False,False,False,False)    
         
     if keys[key.T]:
         world.fill()   
-        
+                
 clock.schedule(update)         
 
 
 def statusUpdates(dt):
     position = tuple(int(a) for a in player.getPos())
+    velocity = tuple(int(a) for a in player.getVelocity())
     consoleObj.setParameter('Vertices', world.numVertices())
     consoleObj.setParameter('Position', position)
     consoleObj.setParameter('Chunk updates', world.chunksAwaitingUpdate())
+    consoleObj.setParameter('Velocity', velocity)
 
 def volumeUpdates(dt):
     position = tuple(int(a) for a in player.getPos())
-    if keys[key.SPACE]:
-        world.modifyRegionAt(position[0], position[1], position[2], 1, 4)
-    else:
-        world.modifyRegionAt(position[0], position[1], position[2], 0, 12)
+#    if keys[key.SPACE]:
+#        world.modifyRegionAt(position[0], position[1], position[2], 1, 4)
+#    else:
+#        world.modifyRegionAt(position[0], position[1], position[2], 0, 12)
 
 clock.schedule_interval(statusUpdates, 0.2)
 clock.schedule_interval_soft(volumeUpdates, 0.1)

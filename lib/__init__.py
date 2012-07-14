@@ -125,7 +125,7 @@ PLAYER_orient.argtypes = c_void_p, c_float, c_float,
 PLAYER_move = vol_lib.playerMove
 PLAYER_move.argtypes = c_void_p, c_float, c_float, c_float
 PLAYER_newPlayer = vol_lib.newPlayer
-PLAYER_newPlayer.argtypes = c_float, c_float, c_float, c_void_p
+PLAYER_newPlayer.argtypes = c_void_p, c_void_p
 PLAYER_getPosX = vol_lib.playerGetPosX
 PLAYER_getPosX.restype = c_float
 PLAYER_getPosX.argtypes = c_void_p,
@@ -135,10 +135,21 @@ PLAYER_getPosY.restype = c_float
 PLAYER_getPosZ = vol_lib.playerGetPosZ
 PLAYER_getPosZ.restype = c_float
 PLAYER_getPosZ.argtypes = c_void_p,
+PLAYER_getVelocityX = vol_lib.playerGetVelocityX
+PLAYER_getVelocityX.restype = c_float
+PLAYER_getVelocityX.argtypes = c_void_p,
+PLAYER_getVelocityY = vol_lib.playerGetVelocityY
+PLAYER_getVelocityY.argtypes = c_void_p,
+PLAYER_getVelocityY.restype = c_float
+PLAYER_getVelocityZ = vol_lib.playerGetVelocityZ
+PLAYER_getVelocityZ.restype = c_float
+PLAYER_getVelocityZ.argtypes = c_void_p,
+PLAYER_playerUpdate = vol_lib.playerUpdate
+PLAYER_playerUpdate.argtypes = c_void_p, c_float, c_bool, c_bool, c_bool, c_bool
   
 class Player:
-    def __init__(self, x, y, z, camera):
-        self.obj = vol_lib.newPlayer(x, y, z, camera.obj)
+    def __init__(self, camera, world):
+        self.obj = vol_lib.newPlayer(camera.obj, world.obj)
     def move(self, dx, dy, dz):
         vol_lib.playerMove(self.obj, dx, dy, dz)
     def orient(self, pitch, yaw):
@@ -148,5 +159,12 @@ class Player:
         y = vol_lib.playerGetPosY(self.obj)
         z = vol_lib.playerGetPosZ(self.obj)
         return (x,y,z)
+    def getVelocity(self):
+        x = vol_lib.playerGetVelocityX(self.obj)
+        y = vol_lib.playerGetVelocityY(self.obj)
+        z = vol_lib.playerGetVelocityZ(self.obj)
+        return (x,y,z)
     def setCameraMVP(self):
         vol_lib.playerSetCamMVP(self.obj)
+    def update(self, dt, movingForward, movingBackward, movingLeft, movingRight):
+        vol_lib.playerUpdate(self.obj, dt, movingForward, movingBackward, movingLeft, movingRight)

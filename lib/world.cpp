@@ -179,6 +179,26 @@ int World::chunksAwaitingUpdate()
    return chunkUpdateQueue.size();
 }
 
+int World::worldChunkSize()
+{
+   return chunk_size;
+}
+
+bool World::is_solid(int x, int y, int z)
+{
+   vector3i coord(x,y,z);
+   vector3i chunkIndex = voxelCoordToChunkIndex(coord);
+   vector3i voxelIndex = voxelCoordToVoxelIndex(coord);
+   
+   return chunks[chunkIndex]->is_solid(voxelIndex);
+}
+   
+
+vector3i World::worldDimensions()
+{
+   return dim;
+}
+
 // Test to see if the chunk at x,y,z (chunk coords) exists.
 bool World::exists(int x, int y, int z)
 {

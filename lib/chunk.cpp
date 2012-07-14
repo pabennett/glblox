@@ -825,3 +825,8 @@ bool Chunk::is_solid(int x, int y, int z)
 {
    return chunkData.is_solid(x,y,z);
 }
+
+bool Chunk::is_solid(vector3i index)
+{
+   return chunkData.is_solid(index.x, index.y, index.z);
+}

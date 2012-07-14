@@ -36,12 +36,10 @@ extern "C" {
    }
    
    // Player
-   Player* newPlayer(float x,
-                     float y,
-                     float z,
-                     Camera* camera)
+   Player* newPlayer(Camera* camera,
+                     World* world)
    {
-      return new Player(x,y,z,camera);
+      return new Player(camera, world);
    }
    
    void playerMove(Player* obj,
@@ -50,6 +48,16 @@ extern "C" {
                    float dz)
    {
       obj->move(dx, dy, dz);
+   }
+   
+   void playerUpdate(Player* obj,
+               float dt,
+               bool movingForward,
+               bool movingBackward,
+               bool movingLeft,
+               bool movingRight)
+   {
+      obj->update(dt, movingForward, movingBackward, movingLeft, movingRight);
    }
    
    void playerOrient(Player* obj,
@@ -77,6 +85,21 @@ extern "C" {
    float playerGetPosZ(Player* obj)
    {
       return obj->getPositionZ();
+   }
+      
+   float playerGetVelocityX(Player* obj)
+   {
+      return obj->getPlayerVelocityX();
+   }
+   
+   float playerGetVelocityY(Player* obj)
+   {
+      return obj->getPlayerVelocityY();
+   }
+   
+   float playerGetVelocityZ(Player* obj)
+   {
+      return obj->getPlayerVelocityZ();
    }
       
    // Camera

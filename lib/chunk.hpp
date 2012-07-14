@@ -44,6 +44,7 @@ class Chunk
       byte get(int, int, int);  
       // Return true if the given voxel is solid.
       bool is_solid(int, int, int);
+      bool is_solid(vector3i);
       // Set the value of a specific voxel.
       void set(int, int, int, byte);         
       void setHeight(int, int, int);
