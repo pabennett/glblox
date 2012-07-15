@@ -2,7 +2,7 @@ class Player
 {                      
    public:      
       // Construct
-      Player(Camera*, World*);
+      Player(Camera*, World*, GLuint);
       // Destruct
       ~Player();
       void move(float, float, float);
@@ -23,6 +23,19 @@ class Player
       float getPlayerVelocityX();
       float getPlayerVelocityY();
       float getPlayerVelocityZ();
+      void draw();
+      bool collisionStatusLeft;
+      bool collisionStatusRight;
+      bool collisionStatusFront;
+      bool collisionStatusBack;
+      bool collisionStatusTop;
+      bool collisionStatusBottom;
+      bool getCollisionStatusLeft();
+      bool getCollisionStatusRight();
+      bool getCollisionStatusFront();
+      bool getCollisionStatusBack();
+      bool getCollisionStatusTop();
+      bool getCollisionStatusBottom();
    private:
       Camera* playerCamera;
       World* world;
@@ -30,6 +43,16 @@ class Player
       glm::vec3 position;
       glm::fquat orientation;
       glm::vec3 velocity;
+      AABB bbox;
+      float bboxSize;
+
+      std::vector<vertex> playerVertices;    // Array of vertices: front faces.
+      GLuint playerVerticesVBO;
+      GLuint posAttrib;
+      GLuint worldPosAttrib;
+      GLuint program;
+      bool onGround;
+      bool AABBCollisionTest(std::vector<AABB>, AABB);
 };
       
       

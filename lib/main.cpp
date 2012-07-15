@@ -37,9 +37,10 @@ extern "C" {
    
    // Player
    Player* newPlayer(Camera* camera,
-                     World* world)
+                     World* world,
+                     GLuint program)
    {
-      return new Player(camera, world);
+      return new Player(camera, world, program);
    }
    
    void playerMove(Player* obj,
@@ -58,6 +59,46 @@ extern "C" {
                bool movingRight)
    {
       obj->update(dt, movingForward, movingBackward, movingLeft, movingRight);
+   }
+   
+   void playerDraw(Player* obj)
+   {
+      obj->draw();
+   }
+   
+   void playerJump(Player* obj)
+   {
+      obj->jump();
+   }
+   
+   bool playerCollisionStatusLeft(Player* obj)
+   {
+      return obj->getCollisionStatusLeft();
+   }
+   
+   bool playerCollisionStatusRight(Player* obj)
+   {
+      return obj->getCollisionStatusRight();
+   }
+   
+   bool playerCollisionStatusFront(Player* obj)
+   {
+      return obj->getCollisionStatusFront();
+   }
+   
+   bool playerCollisionStatusBack(Player* obj)
+   {
+      return obj->getCollisionStatusBack();
+   }
+   
+   bool playerCollisionStatusTop(Player* obj)
+   {
+      return obj->getCollisionStatusTop();
+   }
+   
+   bool playerCollisionStatusBottom(Player* obj)
+   {
+      return obj->getCollisionStatusBottom();
    }
    
    void playerOrient(Player* obj,

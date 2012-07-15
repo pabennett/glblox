@@ -594,22 +594,24 @@ int Chunk::meshBuilderFast()
 
 // Create a cube face for the given voxel.
 
-/*           Above   Front
-               |     / 
-            +-------+ 
-           /|      /|
-          / |     / |
- Left--  /  |    /  | --Right
-        +---|---+   | 
-        |  /+---|---+
-        | /     |  /
-        |/      | /
- (x,y,z)o-------+/
-       /      | 
-    Back     Below
-    
-        |<----->|
-           size
+/*  
+              Above      Front
+                  |     / 
+              +-------+
+             /|      /|
+            / |     / |
+           /  |    /  |
+  Left--  +---|---+   |  --Right
+          |   +---|---+
+          |  /    |  / 
+          | /     | /
+          |/      |/
+   (x,y,z)o-------+
+         /      |
+     Back       Below
+         
+          |<----->|
+             size
 */                                  
 void Chunk::addFace(int x, int y, int z, facePos facing, int size)
 {   

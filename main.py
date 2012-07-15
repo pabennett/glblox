@@ -35,7 +35,7 @@ program = ShaderProgram.open('shaders/main.shader')
 
 # Set up the Window (pyglet)
 config = Config(buffers=2, samples=4)
-window = pyglet.window.Window(caption='GlBlox', width=1152, height=864, config=config, vsync=False)
+window = pyglet.window.Window(caption='GlBlox', width=1152, height=864, config=config, vsync=False, fullscreen=False)
 window.set_exclusive_mouse(True)
 
 console_font = font.load('Consolas', 14, bold=False, italic=False)
@@ -50,7 +50,7 @@ consoleObj.addParameter('Vertices')
 consoleObj.addParameter('Position')
 consoleObj.addParameter('Velocity')
 consoleObj.addParameter('Chunk updates')
-                                                
+                                             
 renderingLabel = pyglet.text.Label("Tempstring", 
                           font_name='DejaVu Sans Mono',
                           font_size=14, 
@@ -103,7 +103,7 @@ world.setRandomTerrainEnabledState(False)
 # Create a camera object for viewing and displaying the world
 camera = Camera(window.width, window.height, 65, 0.1, 2000.0, True, program.id)
 camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
-player = Player(camera, world)
+player = Player(camera, world, program.id)
 
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
@@ -127,8 +127,10 @@ def update(dt):
         player.update(dt,False,False,False,False)    
         
     if keys[key.T]:
-        world.fill()   
-                
+        world.fill()
+    if keys[key.SPACE]:
+        player.jump()
+                        
 clock.schedule(update)         
 
 
@@ -140,12 +142,12 @@ def statusUpdates(dt):
     consoleObj.setParameter('Chunk updates', world.chunksAwaitingUpdate())
     consoleObj.setParameter('Velocity', velocity)
 
+
 def volumeUpdates(dt):
     position = tuple(int(a) for a in player.getPos())
-#    if keys[key.SPACE]:
-#        world.modifyRegionAt(position[0], position[1], position[2], 1, 4)
-#    else:
-#        world.modifyRegionAt(position[0], position[1], position[2], 0, 12)
+    if keys[key.LSHIFT]:
+        world.modifyRegionAt(position[0], position[1], position[2], 0, 12)
+
 
 clock.schedule_interval(statusUpdates, 0.2)
 clock.schedule_interval_soft(volumeUpdates, 0.1)
@@ -161,6 +163,7 @@ def on_draw():
     window.clear()
     # Update camera
     player.setCameraMVP()
+    player.draw()
     # Wireframe Mode
     if keys[key.G]:
         glPolygonMode(GL_FRONT, GL_LINE)
@@ -168,9 +171,9 @@ def on_draw():
         glPolygonMode(GL_FRONT, GL_FILL)
     # Draw World   
     world.draw(player)
-    # Show Console Data
+    # Show Console Dataa
     consoleObj.draw()
-    # Show FPS       
+    # Show FPS
     fps.draw()
 
 # Initialisation

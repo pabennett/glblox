@@ -25,12 +25,6 @@ typedef struct{
    xfacePos x; yfacePos y; zfacePos z;
 } faceGroup;
 
-// Vertices are stored as 8bit unsigned.
-// They are modified in the vertex shader to apply the chunk world offset.
-typedef struct{
-   byte x, y, z, w;
-} vertex;
-
 class Chunk
 {                      
    public:      

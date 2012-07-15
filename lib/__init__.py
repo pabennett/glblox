@@ -124,8 +124,6 @@ PLAYER_orient = vol_lib.playerOrient
 PLAYER_orient.argtypes = c_void_p, c_float, c_float, 
 PLAYER_move = vol_lib.playerMove
 PLAYER_move.argtypes = c_void_p, c_float, c_float, c_float
-PLAYER_newPlayer = vol_lib.newPlayer
-PLAYER_newPlayer.argtypes = c_void_p, c_void_p
 PLAYER_getPosX = vol_lib.playerGetPosX
 PLAYER_getPosX.restype = c_float
 PLAYER_getPosX.argtypes = c_void_p,
@@ -146,10 +144,16 @@ PLAYER_getVelocityZ.restype = c_float
 PLAYER_getVelocityZ.argtypes = c_void_p,
 PLAYER_playerUpdate = vol_lib.playerUpdate
 PLAYER_playerUpdate.argtypes = c_void_p, c_float, c_bool, c_bool, c_bool, c_bool
-  
+
+vol_lib.playerCollisionStatusLeft.restype = c_bool
+vol_lib.playerCollisionStatusRight.restype = c_bool
+vol_lib.playerCollisionStatusFront.restype = c_bool
+vol_lib.playerCollisionStatusBack.restype = c_bool
+vol_lib.playerCollisionStatusTop.restype = c_bool
+vol_lib.playerCollisionStatusBottom.restype = c_bool
 class Player:
-    def __init__(self, camera, world):
-        self.obj = vol_lib.newPlayer(camera.obj, world.obj)
+    def __init__(self, camera, world, program):
+        self.obj = vol_lib.newPlayer(camera.obj, world.obj, program)
     def move(self, dx, dy, dz):
         vol_lib.playerMove(self.obj, dx, dy, dz)
     def orient(self, pitch, yaw):
@@ -168,3 +172,16 @@ class Player:
         vol_lib.playerSetCamMVP(self.obj)
     def update(self, dt, movingForward, movingBackward, movingLeft, movingRight):
         vol_lib.playerUpdate(self.obj, dt, movingForward, movingBackward, movingLeft, movingRight)
+    def draw(self):
+        vol_lib.playerDraw(self.obj)
+    def jump(self):
+        vol_lib.playerJump(self.obj)
+    def getPlayerCollisionStatus(self):
+        status = [False, False, False, False, False, False]
+        status[0] = vol_lib.playerCollisionStatusLeft(self.obj)
+        status[1] = vol_lib.playerCollisionStatusRight(self.obj)
+        status[2] = vol_lib.playerCollisionStatusFront(self.obj)
+        status[3] = vol_lib.playerCollisionStatusBack(self.obj)
+        status[4] = vol_lib.playerCollisionStatusTop(self.obj)
+        status[5] = vol_lib.playerCollisionStatusBottom(self.obj)
+        return status
