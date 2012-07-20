@@ -145,12 +145,7 @@ PLAYER_getVelocityZ.argtypes = c_void_p,
 PLAYER_playerUpdate = vol_lib.playerUpdate
 PLAYER_playerUpdate.argtypes = c_void_p, c_float, c_bool, c_bool, c_bool, c_bool
 
-vol_lib.playerCollisionStatusLeft.restype = c_bool
-vol_lib.playerCollisionStatusRight.restype = c_bool
-vol_lib.playerCollisionStatusFront.restype = c_bool
-vol_lib.playerCollisionStatusBack.restype = c_bool
-vol_lib.playerCollisionStatusTop.restype = c_bool
-vol_lib.playerCollisionStatusBottom.restype = c_bool
+
 class Player:
     def __init__(self, camera, world, program):
         self.obj = vol_lib.newPlayer(camera.obj, world.obj, program)
@@ -176,12 +171,3 @@ class Player:
         vol_lib.playerDraw(self.obj)
     def jump(self):
         vol_lib.playerJump(self.obj)
-    def getPlayerCollisionStatus(self):
-        status = [False, False, False, False, False, False]
-        status[0] = vol_lib.playerCollisionStatusLeft(self.obj)
-        status[1] = vol_lib.playerCollisionStatusRight(self.obj)
-        status[2] = vol_lib.playerCollisionStatusFront(self.obj)
-        status[3] = vol_lib.playerCollisionStatusBack(self.obj)
-        status[4] = vol_lib.playerCollisionStatusTop(self.obj)
-        status[5] = vol_lib.playerCollisionStatusBottom(self.obj)
-        return status

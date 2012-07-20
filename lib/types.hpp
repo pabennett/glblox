@@ -58,10 +58,24 @@ typedef struct{
    byte x, y, z, w;
 } vertex;
 
-struct AABB {
-   float x0, y0, z0, x1, y1, z1;
-   AABB( float x0=0.0,float y0=0.0,float z0=0.0,
-         float x1=0.0,float y1=0.0,float z1=0.0) : x0(x0), y0(y0), z0(z0),
-                                                   x1(x1), y1(y1), z1(z1) {}
-};
+// Used for determining AABB box collisions.
+struct collisionStatus
+{
+   bool left;
+   bool right;
+   bool front;
+   bool back;
+   bool top;
+   bool bottom;
+   collisionStatus(bool left = false,
+                   bool right = false,
+                   bool front = false,
+                   bool back = false,
+                   bool top = false,
+                   bool bottom = false) :
+                   left(left), right(right),
+                   front(front), back(back),
+                   top(top), bottom(bottom) {}
+}; 
+
 

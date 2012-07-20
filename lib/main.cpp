@@ -70,37 +70,7 @@ extern "C" {
    {
       obj->jump();
    }
-   
-   bool playerCollisionStatusLeft(Player* obj)
-   {
-      return obj->getCollisionStatusLeft();
-   }
-   
-   bool playerCollisionStatusRight(Player* obj)
-   {
-      return obj->getCollisionStatusRight();
-   }
-   
-   bool playerCollisionStatusFront(Player* obj)
-   {
-      return obj->getCollisionStatusFront();
-   }
-   
-   bool playerCollisionStatusBack(Player* obj)
-   {
-      return obj->getCollisionStatusBack();
-   }
-   
-   bool playerCollisionStatusTop(Player* obj)
-   {
-      return obj->getCollisionStatusTop();
-   }
-   
-   bool playerCollisionStatusBottom(Player* obj)
-   {
-      return obj->getCollisionStatusBottom();
-   }
-   
+      
    void playerOrient(Player* obj,
                      float pitch,
                      float yaw)

@@ -108,28 +108,23 @@ player = Player(camera, world, program.id)
 # Set up the Keyboard handler (pyglet)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)
+
 # Key Hold Events
 def update(dt):
-    m = min(dt, 0.17)*50
     if keys[key.W]:
-        #player.move(0,0,m)
         player.update(dt,True,False,False,False)
     elif keys[key.S]:
-        #player.move(0,0,-m)
         player.update(dt,False,True,False,False)
     if keys[key.A]:
-        #player.move(-m,0,0)
         player.update(dt,False,False,True,False)
     elif keys[key.D]:
-        #player.move(m,0,0)
         player.update(dt,False,False,False,True)
     else:
         player.update(dt,False,False,False,False)    
         
     if keys[key.T]:
         world.fill()
-    if keys[key.SPACE]:
-        player.jump()
+    
                         
 clock.schedule(update)         
 
@@ -171,7 +166,7 @@ def on_draw():
         glPolygonMode(GL_FRONT, GL_FILL)
     # Draw World   
     world.draw(player)
-    # Show Console Dataa
+    # Show Console Data
     consoleObj.draw()
     # Show FPS
     fps.draw()

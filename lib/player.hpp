@@ -1,3 +1,5 @@
+#include "AABB.cpp"
+
 class Player
 {                      
    public:      
@@ -24,35 +26,34 @@ class Player
       float getPlayerVelocityY();
       float getPlayerVelocityZ();
       void draw();
-      bool collisionStatusLeft;
-      bool collisionStatusRight;
-      bool collisionStatusFront;
-      bool collisionStatusBack;
-      bool collisionStatusTop;
-      bool collisionStatusBottom;
-      bool getCollisionStatusLeft();
-      bool getCollisionStatusRight();
-      bool getCollisionStatusFront();
-      bool getCollisionStatusBack();
-      bool getCollisionStatusTop();
-      bool getCollisionStatusBottom();
    private:
       Camera* playerCamera;
       World* world;
+      GLuint program;
       
       glm::vec3 position;
       glm::fquat orientation;
       glm::vec3 velocity;
-      AABB bbox;
-      float bboxSize;
-
-      std::vector<vertex> playerVertices;    // Array of vertices: front faces.
-      GLuint playerVerticesVBO;
-      GLuint posAttrib;
-      GLuint worldPosAttrib;
-      GLuint program;
+      
+      // Properties
+      bool gravityEnabled;
+      bool collisionTestsEnabled;
+      
+      // Collision Detection
+      AABB playerBox;
       bool onGround;
-      bool AABBCollisionTest(std::vector<AABB>, AABB);
+      bool leftCollisionTest();
+      bool rightCollisionTest();
+      bool frontCollisionTest();
+      bool backCollisionTest();
+      bool topCollisionTest();
+      bool bottomCollisionTest();
+      bool touchingVoxelLeftAt(int, int, int);
+      bool touchingVoxelRightAt(int, int, int);
+      bool touchingVoxelFrontAt(int, int, int);
+      bool touchingVoxelBackAt(int, int, int);
+      bool touchingVoxelAboveAt(int, int, int);
+      bool touchingVoxelBelowAt(int, int, int);
 };
       
       
