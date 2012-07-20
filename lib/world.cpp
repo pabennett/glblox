@@ -383,7 +383,7 @@ void World::draw(glm::vec3 camPosition, glm::mat4 mvp)
                // Frustrum has tolerance applied.
                continue;
             }
-            else if(not (*i).second->meshBuildRunning())
+            else
             {
                // Render the chunk. Cam is used for back-face culling.
                (*i).second->draw(renderProgram, camPosition);

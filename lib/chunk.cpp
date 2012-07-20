@@ -385,8 +385,48 @@ void Chunk::set(int x, int y, int z, byte initialiser)
 {
    chunkData.set(x,y,z,initialiser);
    modified = chunkData.is_modified() or modified;
+   if(chunkData.is_modified())
+   {
+      markNeighbourStale(x,y,z);
+   }
    visible = !chunkData.is_empty();
    chunkData.clearModifiedState();
+}
+
+void Chunk::markNeighbourStale(int x, int y, int z)
+{
+   // If a border voxel is set mark the neighbour chunk as stale.
+   if(x == 0 and leftNeighbour != 0)
+   {
+      leftNeighbour->markStale();
+   }
+   else if(x == chunk_size - 1 and rightNeighbour != 0)
+   {
+      rightNeighbour->markStale();
+   }
+   
+   if(z == 0 and backNeighbour != 0)
+   {
+      backNeighbour->markStale();
+   }
+   else if(z == chunk_size - 1 and frontNeighbour != 0)
+   {
+      frontNeighbour->markStale();
+   }
+   
+   if(y == 0 and bottomNeighbour != 0)
+   {
+      bottomNeighbour->markStale();
+   }
+   else if(y == chunk_size - 1 and topNeighbour != 0)
+   {
+     topNeighbour->markStale();
+   }
+}
+
+void Chunk::markStale()
+{
+   modified = true;
 }
 
 // Get the value of an arbitrary voxel in the chunk.

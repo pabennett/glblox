@@ -72,6 +72,9 @@ class Chunk
       void uncompress();   
       // Return the vertex count.
       int getVertexCount();   
+      // Mark as stale (requires mesh rebuild)
+      void markStale();
+      void markNeighbourStale(int, int, int);
       // Set pointer to neighbour chunk.
       void setLeftNeighbour(Chunk*);                  
       void setRightNeighbour(Chunk*);                 
