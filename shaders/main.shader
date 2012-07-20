@@ -20,7 +20,7 @@ vertex:
       const vec4 vectorOffset = vec4(worldPosition, 0.0);
       vec4 vertex = vec4(position.x, position.y, position.z, 1);
       data.fnormal = normal;
-      data.depth = length((mvp * (vertex + vectorOffset)).xyz);
+      data.depth = 1-(min(1,length((mvp * (vertex + vectorOffset)).xyz)/(worldHeight/2)));
       texcoord = mod(float(position.w + worldPosition.y) / worldHeight,1);
       gl_Position = mvp * (vertex + vectorOffset);
    }
@@ -44,10 +44,13 @@ fragment:
       float red, green, blue;
       vec3 colours;
       
-      colours = thermal(texcoord);
+      colours = thermal(data.depth);
       red = colours.x;
+      //red = 1.0f;
       green = colours.y;
+      //green = 1.0f;
       blue = colours.z;
+      //blue = 1.0f;
       
       // Attenuate facecolour for each normal to accentuate the cubes.
       if(data.fnormal.y == 0)
