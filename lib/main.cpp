@@ -66,6 +66,11 @@ extern "C" {
       obj->draw();
    }
    
+   void playerSetFlightMode(Player* obj, bool flightMode)
+   {
+      obj->setFlightMode(flightMode);
+   }
+   
    void playerJump(Player* obj)
    {
       obj->jump();

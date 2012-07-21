@@ -8,6 +8,7 @@ class Player
       // Destruct
       ~Player();
       void move(float, float, float);
+      void setFlightMode(bool);
       void jump();
       void orient(float, float);
       void setCameraMVP();
@@ -38,6 +39,7 @@ class Player
       // Properties
       bool gravityEnabled;
       bool collisionTestsEnabled;
+      bool flightEnabled;
       
       // Collision Detection
       AABB playerBox;

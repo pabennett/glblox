@@ -29,6 +29,7 @@ import numpy as np
 from ctypes import c_byte
 
 import console
+import controller
 
 
 program = ShaderProgram.open('shaders/main.shader')
@@ -106,29 +107,8 @@ camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
 player = Player(camera, world, program.id)
 
 # Set up the Keyboard handler (pyglet)
-keys = key.KeyStateHandler()
-window.push_handlers(keys)
-
-# Key Hold Events
-def update(dt):
-    if keys[key.W]:
-        player.update(dt,True,False,False,False)
-    elif keys[key.S]:
-        player.update(dt,False,True,False,False)
-    if keys[key.A]:
-        player.update(dt,False,False,True,False)
-    elif keys[key.D]:
-        player.update(dt,False,False,False,True)
-    else:
-        player.update(dt,False,False,False,False)    
-        
-    if keys[key.T]:
-        world.fill()
+controller = controller.Controller(window, player)
     
-                        
-clock.schedule(update)         
-
-
 def statusUpdates(dt):
     position = tuple(int(a) for a in player.getPos())
     velocity = tuple(int(a) for a in player.getVelocity())
@@ -137,20 +117,8 @@ def statusUpdates(dt):
     consoleObj.setParameter('Chunk updates', world.chunksAwaitingUpdate())
     consoleObj.setParameter('Velocity', velocity)
 
-
-def volumeUpdates(dt):
-    position = tuple(int(a) for a in player.getPos())
-    if keys[key.LSHIFT]:
-        world.modifyRegionAt(position[0], position[1], position[2], 0, 12)
-
-
 clock.schedule_interval(statusUpdates, 0.2)
-clock.schedule_interval_soft(volumeUpdates, 0.1)
 
-# Set up the Mouse handler (pyglet)
-@window.event
-def on_mouse_motion(x, y, dx, dy):
-    player.orient(dx*0.08, -dy*0.08)
     
 # MAIN RENDER LOOP
 @window.event
@@ -159,11 +127,7 @@ def on_draw():
     # Update camera
     player.setCameraMVP()
     player.draw()
-    # Wireframe Mode
-    if keys[key.G]:
-        glPolygonMode(GL_FRONT, GL_LINE)
-    else:
-        glPolygonMode(GL_FRONT, GL_FILL)
+
     # Draw World   
     world.draw(player)
     # Show Console Data

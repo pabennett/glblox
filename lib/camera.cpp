@@ -33,7 +33,7 @@ Camera::Camera(int w, int h,
    fovy = vertFOV;
    zNear = frustrumNear;
    zFar = frustrumFar;
-   flight_mode = flightMode;
+   flightMode = flightMode;
    position = glm::vec3(0.0, 0.0, 0.0);
    rotSpeed = glm::vec3(0.0, 0.0, 0.0);
    movSpeed = glm::vec3(0.0, 0.0, 0.0);
@@ -54,6 +54,11 @@ void Camera::perspective(int w, int h, float vertFOV, float frustrumNear, float 
    projection = glm::perspective(fovy, aspect, zNear, zFar); 
    // Update the view and mvp.
    updateView();
+}
+
+void Camera::setFlightMode(bool flightMode)
+{
+   Camera::flightMode = flightMode;
 }
 
 // Teleport the camera to the specified world co-ordinates.
@@ -137,7 +142,7 @@ glm::fquat Camera::orient(float pitch , float yaw)
 // Moves the camera by the specified x, y, z values.
 glm::vec3 Camera::move(float dx, float dy, float dz)
 {
-   if (flight_mode)
+   if (flightMode)
    {
       // This is flight mode so we need to move along the forward axis.
       position += m_xaxis * dx; // Move left or right along the camera's x-axis.

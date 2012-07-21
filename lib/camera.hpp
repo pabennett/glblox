@@ -16,9 +16,7 @@
 
 // Implements a quaternion based first person camera.
 class Camera
-{   
-   bool flight_mode;                   // Switch to enable camera flight mode.
-   
+{      
    glm::vec3 m_xaxis;                  // Camera view matrix x axis
    glm::vec3 m_yaxis;                  // Camera view matrix y axis
    glm::vec3 m_zaxis;                  // Camera view matrix z axis
@@ -52,6 +50,7 @@ class Camera
       float getPosX();
       float getPosY();
       float getPosZ();
+      void setFlightMode(bool);
       glm::fquat orient(float, float);
       glm::vec3 move(float, float, float);
       bool visibleY();
@@ -63,4 +62,5 @@ class Camera
       glm::fquat fromAxisAngle(glm::vec3, float);
       void updateView();
       GLuint renderProgram;
+      bool flightMode;                    // Switch to enable camera flight mode.
 };

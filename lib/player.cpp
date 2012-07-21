@@ -29,8 +29,11 @@ Player::Player(Camera* camera, World* world, GLuint program)
    position.y = float((worldDim.y/2) * chunk_size);
    position.z = float((worldDim.z/2) * chunk_size);
    
-   gravityEnabled = false;
+   gravityEnabled = true;
+   flightEnabled = false;
    collisionTestsEnabled = true;
+   
+   playerCamera->setFlightMode(flightEnabled);
    
    /*
    Bounding box is 2x1:
@@ -70,12 +73,23 @@ void Player::move(float dx, float dy, float dz)
    playerBox.setPosition(glm::vec3(position.x, position.y-0.5f, position.z));
 }
 
-// Physics update for player
+// Enable or disable flight mode
+void Player::setFlightMode(bool flightEnabled)
+{
+   Player::flightEnabled = flightEnabled;
+   playerCamera->setFlightMode(flightEnabled);
+}
+   
+// Jump!
 void Player::jump()
 {
-   velocity.y += 20.0f;
+   if(onGround)
+   {
+      velocity.y += 35.0f;
+   }
 }
 
+// Physics update for player
 void Player::update(float dt,
                     bool moveForward,
                     bool moveBackward,
@@ -85,7 +99,7 @@ void Player::update(float dt,
        
    float movementSpeed = dt * 80.0f;
    float gravity = 120.0f;
-   float damping = 5.0f;
+   float damping = 8.0f;
    glm::vec3 surfaceNormal;
   
    if(moveRight)
