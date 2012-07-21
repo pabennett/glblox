@@ -14,9 +14,16 @@ from pyglet.window import key
 from pyglet import clock
 
 class Controller(object):
-    def __init__(self, window, player):
+    def __init__(self, window, player, console):
         self.keys = key.KeyStateHandler()
         self.player = player
+        
+        # Console
+        self.console = console        
+        
+        # States
+        self.states = {}
+        self.states['Wireframe Mode'] = False        
         
         # Key Press Events
         self.keyPressEvents = {}
@@ -53,12 +60,21 @@ class Controller(object):
 
     def on_key_press(self, symbol, modifiers):
         # Handle events that only require one action per keypress here.
+        
+        # Player jump
         if symbol == key.SPACE:
             if not self.keyPressed(key.SPACE):
                 self.player.jump()
+        # Enable or disable flight mode.
         if symbol == key.F:
             if not self.keyPressed(key.F):
                 self.player.toggleFlightMode()
+        # Enable or disable wireframe mode.
+        if symbol == key.T:
+            if not self.keyPressed(key.T):
+                self.states['Wireframe Mode'] = not self.states['Wireframe Mode']
+                self.console.updateConsole('Wireframe mode: ' +
+                                           str(self.states['Wireframe Mode']))
                 
         self.keyPressEvents[symbol] = True
         

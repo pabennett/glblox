@@ -18,7 +18,6 @@ import pyglet
 from pyglet.gl import *
 from gletools import ShaderProgram
 
-from pyglet.window import key
 from pyglet import clock
 from pyglet import font
 
@@ -40,30 +39,21 @@ window = pyglet.window.Window(caption='GlBlox', width=1152, height=864, config=c
 window.set_exclusive_mouse(True)
 
 console_font = font.load('Consolas', 14, bold=False, italic=False)
-fps = pyglet.clock.ClockDisplay(color=(1,1,1,1),
-                                font=console_font)  
 
-consoleObj = console.StatusConsole(x=window.width * 0.005, 
-                             y=window.height * 0.98,
-                             width=window.width)
-                  
-consoleObj.addParameter('Vertices')
-consoleObj.addParameter('Position')
-consoleObj.addParameter('Velocity')
-consoleObj.addParameter('Chunk updates')
-                                             
-renderingLabel = pyglet.text.Label("Tempstring", 
-                          font_name='DejaVu Sans Mono',
-                          font_size=14, 
-                          x=window.width * 0.005, 
-                          y=window.height * 0.98)   
-                          
-positionLabel = pyglet.text.Label("Tempstring", 
-                          font_name='DejaVu Sans Mono',
-                          font_size=14, 
-                          x=window.width * 0.005, 
-                          y=window.height * 0.90)   
-                                 
+status = console.StatusConsole(x=window.width * 0.005, 
+                          y=window.height * 0.98,
+                          width=window.width)
+                             
+console = console.Console(x=window.width * 0.005,
+                          y=window.height * 0.70,
+                          width=window.width)
+      
+status.addParameter('FPS')      
+status.addParameter('Vertices')
+status.addParameter('Position')
+status.addParameter('Velocity')
+status.addParameter('Chunk updates')
+                                                                              
 pyglet.clock.ClockDisplay()
 wiremode = False
 
@@ -107,15 +97,18 @@ camera.perspective(window.width, window.height, 65, 0.1, 2000.0)
 player = Player(camera, world, program.id)
 
 # Set up the Keyboard handler (pyglet)
-controller = controller.Controller(window, player)
+controller = controller.Controller(window, player, console)
     
 def statusUpdates(dt):
     position = tuple(int(a) for a in player.getPos())
     velocity = tuple(int(a) for a in player.getVelocity())
-    consoleObj.setParameter('Vertices', world.numVertices())
-    consoleObj.setParameter('Position', position)
-    consoleObj.setParameter('Chunk updates', world.chunksAwaitingUpdate())
-    consoleObj.setParameter('Velocity', velocity)
+    fps = clock.get_fps()
+    
+    status.setParameter('Vertices', world.numVertices())
+    status.setParameter('Position', position)
+    status.setParameter('Chunk updates', world.chunksAwaitingUpdate())
+    status.setParameter('Velocity', velocity)
+    status.setParameter('FPS', fps)
 
 clock.schedule_interval(statusUpdates, 0.2)
 
@@ -124,16 +117,24 @@ clock.schedule_interval(statusUpdates, 0.2)
 @window.event
 def on_draw():
     window.clear()
+    
     # Update camera
     player.setCameraMVP()
     player.draw()
+    
+    # Check wireframe mode
+    if controller.states['Wireframe Mode']:
+        glPolygonMode(GL_FRONT, GL_LINE)
+    else:
+        glPolygonMode(GL_FRONT, GL_FILL)
 
     # Draw World   
     world.draw(player)
+    
+    glPolygonMode(GL_FRONT, GL_FILL)
     # Show Console Data
-    consoleObj.draw()
-    # Show FPS
-    fps.draw()
+    status.draw()
+    console.draw()
 
 # Initialisation
 if __name__ == '__main__':
