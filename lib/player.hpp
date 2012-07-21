@@ -16,6 +16,7 @@ class Player
       float getPositionX();
       float getPositionY();
       float getPositionZ();
+      float voxelSize;
       glm::vec3 getPosition();
       glm::mat4 getPlayerCamMVP();
       // Player Camera Stuff

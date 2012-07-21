@@ -12,8 +12,6 @@
 
 #include "player.hpp"
 
-const float sz =0.5;
-
 Player::Player(Camera* camera, World* world, GLuint program) 
 {              
    orientation = glm::fquat(1.0f, 0.0f, 0.0f, 0.0f);
@@ -28,6 +26,8 @@ Player::Player(Camera* camera, World* world, GLuint program)
    position.x = float((worldDim.x/2) * chunk_size);
    position.y = float((worldDim.y/2) * chunk_size);
    position.z = float((worldDim.z/2) * chunk_size);
+   
+   voxelSize = 1.0f;
    
    gravityEnabled = true;
    flightEnabled = false;
@@ -177,7 +177,7 @@ void Player::update(float dt,
       // Do we need to check for collisions below?
       int vx, vy, vz; 
       // Sz = Voxel Size / 2 = 0.5
-      const float sz = 0.5f; 
+      const float sz = voxelSize / 2.0f; 
       
       // Falling or touching ground.
       if(velocity.y < 0.0f or onGround)
@@ -508,6 +508,7 @@ bool Player::frontCollisionTest()
 
 bool Player::touchingVoxelBelowAt(int x, int y, int z)
 {
+   const float sz = voxelSize / 2.0f; 
    if(world->is_solid(x, y, z))
    {        
       AABB neighbour(glm::vec3(x+sz, y+sz, z+sz),glm::vec3(sz, sz, sz));
@@ -518,6 +519,7 @@ bool Player::touchingVoxelBelowAt(int x, int y, int z)
 
 bool Player::touchingVoxelAboveAt(int x, int y, int z)
 {
+   const float sz = voxelSize / 2.0f; 
    if(world->is_solid(x, y, z))
    {        
       AABB neighbour(glm::vec3(x+sz, y+sz, z+sz),glm::vec3(sz, sz, sz));
@@ -528,6 +530,7 @@ bool Player::touchingVoxelAboveAt(int x, int y, int z)
 
 bool Player::touchingVoxelLeftAt(int x, int y, int z)
 {
+   const float sz = voxelSize / 2.0f; 
    if(world->is_solid(x, y, z))
    {        
       AABB neighbour(glm::vec3(x+sz, y+sz, z+sz),glm::vec3(sz, sz, sz));
@@ -538,6 +541,7 @@ bool Player::touchingVoxelLeftAt(int x, int y, int z)
 
 bool Player::touchingVoxelRightAt(int x, int y, int z)
 {
+   const float sz = voxelSize / 2.0f; 
    if(world->is_solid(x, y, z))
    {        
       AABB neighbour(glm::vec3(x+sz, y+sz, z+sz),glm::vec3(sz, sz, sz));
@@ -548,6 +552,7 @@ bool Player::touchingVoxelRightAt(int x, int y, int z)
 
 bool Player::touchingVoxelFrontAt(int x, int y, int z)
 {
+   const float sz = voxelSize / 2.0f; 
    if(world->is_solid(x, y, z))
    {        
       AABB neighbour(glm::vec3(x+sz, y+sz, z+sz),glm::vec3(sz, sz, sz));
@@ -558,6 +563,7 @@ bool Player::touchingVoxelFrontAt(int x, int y, int z)
 
 bool Player::touchingVoxelBackAt(int x, int y, int z)
 {
+   const float sz = voxelSize / 2.0f; 
    if(world->is_solid(x, y, z))
    {        
       AABB neighbour(glm::vec3(x+sz, y+sz, z+sz),glm::vec3(sz, sz, sz));
