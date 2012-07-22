@@ -172,6 +172,8 @@ class Player:
         vol_lib.playerDraw(self.obj)
     def jump(self):
         vol_lib.playerJump(self.obj)
+    def fire(self):
+        vol_lib.playerFire(self.obj)
     def toggleFlightMode(self):
         self.flightMode = not self.flightMode
         vol_lib.playerSetFlightMode(self.obj, self.flightMode)

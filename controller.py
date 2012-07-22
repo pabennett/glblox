@@ -65,6 +65,12 @@ class Controller(object):
         if symbol == key.SPACE:
             if not self.keyPressed(key.SPACE):
                 self.player.jump()
+                
+        # Player jump
+        if symbol == key.R:
+            if not self.keyPressed(key.R):
+                self.player.fire()
+                
         # Enable or disable flight mode.
         if symbol == key.F:
             if not self.keyPressed(key.F):

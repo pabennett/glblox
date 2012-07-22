@@ -89,6 +89,13 @@ void Player::jump()
    }
 }
 
+//Shoot!
+void Player::fire()
+{
+   glm::vec3 pVelocity = playerCamera->getCameraForward() * 150.0f;
+   projectiles.push_back(new Projectile(world, position, pVelocity, program));
+}
+
 // Physics update for player
 void Player::update(float dt,
                     bool moveForward,
@@ -260,11 +267,37 @@ void Player::update(float dt,
    position += velocity * dt;
    playerCamera->setPos(position.x, position.y, position.z);
    
+   // Update projectiles
+   if(!projectiles.empty())
+   {
+      for(std::vector<Projectile*>::iterator ii = projectiles.begin(); 
+                                             ii != projectiles.end();)
+      {
+         Projectile* projectile = (*ii);
+         projectile->update(dt);
+         if(projectile->stopped())
+         {
+            ii = projectiles.erase(ii);
+            delete projectile;
+         }
+         else
+         {
+            ++ii;
+         }
+      }
+   }
 }
 
 void Player::draw()
 {
-   // TODO
+   if(!projectiles.empty())
+   {
+      for(std::vector<Projectile*>::iterator ii = projectiles.begin(); 
+                                             ii != projectiles.end(); ++ii)
+      {
+         (*ii)->draw();
+      }
+   }
 }
 
 float Player::getPlayerVelocityX()

@@ -1,4 +1,5 @@
 #include "AABB.cpp"
+#include "Projectile.cpp"
 
 class Player
 {                      
@@ -10,6 +11,7 @@ class Player
       void move(float, float, float);
       void setFlightMode(bool);
       void jump();
+      void fire();
       void orient(float, float);
       void setCameraMVP();
       void update(float, bool, bool, bool, bool);
@@ -36,6 +38,8 @@ class Player
       glm::vec3 position;
       glm::fquat orientation;
       glm::vec3 velocity;
+      
+      std::vector<Projectile*> projectiles;
       
       // Properties
       bool gravityEnabled;
