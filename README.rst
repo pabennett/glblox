@@ -1,7 +1,7 @@
 GlBlox - Rendering experiments
 ==============================
 
-.. image:: https://github.com/pabennett/glblox/glblox.png
+![GlBlox](http://www.bytebash.com/files/glblox.png "GlBlox")
 
 Description
 -----------
