@@ -1,6 +1,8 @@
 GlBlox - Rendering experiments
 ==============================
 
+.. image:: glblox.png
+
 Description
 -----------
 
@@ -23,14 +25,17 @@ Features implemented
 * Frustrum culling.
 * Back-face culling.
 * Block shading using colourmaps (GLSL)
+* Collision detection.
+* Chunk paging for large worlds.
 
 Features to add
 ---------------
 
-* Collision detection.
 * Volume storage and loading with compression + memory optimisations.
 * Block picking and volume modification.
-* Paging for loading large worlds.
+* Lighting effects
+* GUI
+* Further volume generation procedures, such as 3D simplex.
 
 Further reading
 --------------------
