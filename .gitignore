@@ -3,3 +3,5 @@
 *.dll
 *.pyc
 *.spyderproject
+dist
+build

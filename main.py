@@ -21,15 +21,14 @@ from gletools import ShaderProgram
 from pyglet import clock
 from pyglet import font
 
-from lib import Camera, World, Player
+from external import Camera, World, Player
 
 import Image
-import numpy as np
+
 from ctypes import c_byte
 
 import console
 import controller
-
 
 program = ShaderProgram.open('shaders/main.shader')
 
@@ -70,8 +69,11 @@ im = im.convert("L")
 # Get the dimensions of the image
 (im_width,im_height) = im.size
 im_max = im.getextrema()[1]
-# Convert the image data into a numpy array
-data = np.array(im.getdata(), dtype=c_byte)
+# Convert the image data into an array
+image_data = bytearray(im.getdata())
+data = (c_byte * len(image_data))()
+for i in range(len(image_data)):
+    data[i]= image_data[i]
 # Create a world large enough to hold this image
 wx = im_width / chunk_size
 wz = im_height / chunk_size

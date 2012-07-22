@@ -13,13 +13,27 @@ __contact__ = "www.bytebash.com"
 __version__ = "$Rev: 2 $"
 __date__ = "$Date: 2012-03-11 15:19:25 +0000 (Sun, 11 Mar 2012) $"
 
-from os.path import abspath, dirname, join
+from os.path import join
 import ctypes
+import sys, os
 from ctypes import c_float, c_int, cdll, c_void_p, c_byte, c_char_p, sizeof, c_uint, c_bool
 
 c_float_p = ctypes.POINTER(ctypes.c_float)
 
-here = dirname(abspath(__file__))
+
+def we_are_frozen():
+    """Returns whether we are frozen via py2exe.
+    This will affect how we find out where we are located."""
+    return hasattr(sys, "frozen")
+
+def module_path():
+    """ This will get us the program's directory,
+    even if we are frozen using py2exe"""
+    if we_are_frozen():
+        return os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding( )))
+    return os.path.dirname(unicode(__file__, sys.getfilesystemencoding( )))
+    
+here = module_path() + "\lib"
 path = join(here, 'glblox.so')
 
 print "Loading library: " + path
@@ -104,11 +118,11 @@ class World:
     def numVertices(self):
         return vol_lib.worldNumVertices(self.obj)
     def load(self, array, x, y, z, chunk_size):
-        c_array_p = array.ctypes.data_as(c_char_p)
-        vol_lib.worldLoad(self.obj,c_array_p, x, y, z, chunk_size)
+        #c_array_p = array.ctypes.data_as(c_char_p)
+        vol_lib.worldLoad(self.obj,array, x, y, z, chunk_size)
     def loadHeightmap(self, array, chunk_size):
-        c_array_p = array.ctypes.data_as(c_char_p)
-        vol_lib.worldLoadHeightmap(self.obj,c_array_p, chunk_size)
+        #c_array_p = array.ctypes.data_as(c_char_p)
+        vol_lib.worldLoadHeightmap(self.obj,array, chunk_size)
     def deleteBlockAt(self, x, y, z):
         vol_lib.worldDeleteBlockAt(self.obj, x, y, z)
     def modifyRegionAt(self, x, y, z, val, radius):
