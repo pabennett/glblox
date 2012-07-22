@@ -13,6 +13,11 @@ __contact__ = "www.bytebash.com"
 from pyglet.window import key
 from pyglet import clock
 
+""" Statename strings """
+
+flight = "Flight Mode"
+wireframe = "Wireframe Mode"
+
 class Controller(object):
     def __init__(self, window, player, console):
         self.keys = key.KeyStateHandler()
@@ -23,7 +28,8 @@ class Controller(object):
         
         # States
         self.states = {}
-        self.states['Wireframe Mode'] = False        
+        self.states[wireframe] = False
+        self.states[flight] = False        
         
         # Key Press Events
         self.keyPressEvents = {}
@@ -74,13 +80,16 @@ class Controller(object):
         # Enable or disable flight mode.
         if symbol == key.F:
             if not self.keyPressed(key.F):
-                self.player.toggleFlightMode()
+                self.states[flight] = not self.states[flight]
+                self.console.updateConsole(flight + ": " +
+                                           str(self.states[flight]))
+                self.player.toggleFlightMode(self.states[flight])
         # Enable or disable wireframe mode.
         if symbol == key.T:
             if not self.keyPressed(key.T):
-                self.states['Wireframe Mode'] = not self.states['Wireframe Mode']
-                self.console.updateConsole('Wireframe mode: ' +
-                                           str(self.states['Wireframe Mode']))
+                self.states[wireframe] = not self.states[wireframe]
+                self.console.updateConsole(wireframe + ": " +
+                                           str(self.states[wireframe]))
                 
         self.keyPressEvents[symbol] = True
         

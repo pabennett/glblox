@@ -162,7 +162,6 @@ PLAYER_playerUpdate.argtypes = c_void_p, c_float, c_bool, c_bool, c_bool, c_bool
 
 class Player:
     def __init__(self, camera, world, program):
-        self.flightMode = False
         self.obj = vol_lib.newPlayer(camera.obj, world.obj, program)
     def move(self, dx, dy, dz):
         vol_lib.playerMove(self.obj, dx, dy, dz)
@@ -188,6 +187,5 @@ class Player:
         vol_lib.playerJump(self.obj)
     def fire(self):
         vol_lib.playerFire(self.obj)
-    def toggleFlightMode(self):
-        self.flightMode = not self.flightMode
-        vol_lib.playerSetFlightMode(self.obj, self.flightMode)
+    def toggleFlightMode(self, enabled):
+        vol_lib.playerSetFlightMode(self.obj, enabled)
