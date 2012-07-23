@@ -51,18 +51,11 @@ class Controller(object):
 
     def update(self, dt):
         # Handle events that must occur while a key is pressed.
-        if self.keyPressed(key.W):
-            self.player.update(dt,True,False,False,False)
-        elif self.keyPressed(key.S):
-            self.player.update(dt,False,True,False,False)
-            
-        if self.keyPressed(key.A):
-            self.player.update(dt,False,False,True,False)
-        elif self.keyPressed(key.D):
-            self.player.update(dt,False,False,False,True)
-            
-        self.player.update(dt,False,False,False,False) 
-               
+        self.player.update(dt,
+                           self.keyPressed(key.W),
+                           self.keyPressed(key.S),
+                           self.keyPressed(key.A),
+                           self.keyPressed(key.D))               
 
     def on_key_press(self, symbol, modifiers):
         # Handle events that only require one action per keypress here.

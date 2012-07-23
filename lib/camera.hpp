@@ -58,6 +58,7 @@ class Camera
       glm::vec3 getCameraUp();            // Get the camera UP vector.
       glm::vec3 getCameraRight();         // Get the camera RIGHT vector.
       glm::vec3 getCameraForward();       // Get the camera FORWARD vector.
+      glm::vec3 getCameraFPForward();     // Get the first person forward vector.
    private:
       glm::fquat fromAxisAngle(glm::vec3, float);
       void updateView();

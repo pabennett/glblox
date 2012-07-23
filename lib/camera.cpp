@@ -233,6 +233,11 @@ glm::vec3 Camera::getCameraRight()
    return m_xaxis;
 }
 
+glm::vec3 Camera::getCameraFPForward()
+{
+   return fpforward;
+}
+
 glm::vec3 Camera::getCameraForward()
 {
    return -m_zaxis;

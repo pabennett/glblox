@@ -128,13 +128,29 @@ void Player::update(float dt,
          
    if(moveForward)
    {
-      velocity += playerCamera->getCameraForward() * 
-                  movementSpeed;
+      if(flightEnabled)
+      {
+         velocity += playerCamera->getCameraForward() * 
+                     movementSpeed;
+      }
+      else
+      {
+         velocity += playerCamera->getCameraFPForward() * 
+                     movementSpeed;
+      }
    }
    else if(moveBackward)
    {
-      velocity -= playerCamera->getCameraForward() * 
-                  movementSpeed;
+      if(flightEnabled)
+      {
+         velocity -= playerCamera->getCameraForward() * 
+                     movementSpeed;
+      }
+      else
+      {
+         velocity -= playerCamera->getCameraFPForward() * 
+                     movementSpeed;
+      }
    }
    
    /* Collision Test */
@@ -206,8 +222,6 @@ void Player::update(float dt,
       {
          if(topCollisionTest())
          {
-            position.y = ceil(position.y) - 0.5f;
-            playerBox.setPosition(glm::vec3(position.x, position.y-0.5f, position.z));
             surfaceNormal = glm::vec3(0.0f,-1.0f,0.0f);
             surfaceNormal = (surfaceNormal * glm::dot(surfaceNormal, velocity));
             velocity -= surfaceNormal;
@@ -218,8 +232,6 @@ void Player::update(float dt,
       {
          if(leftCollisionTest())
          {
-            position.x = floor(position.x) + playerBox.extents.x;
-            playerBox.setPosition(glm::vec3(position.x, position.y-0.5f, position.z));
             surfaceNormal = glm::vec3(1.0f,0.0f,0.0f);
             surfaceNormal = (surfaceNormal * glm::dot(surfaceNormal, velocity));
             velocity -= surfaceNormal;
@@ -230,8 +242,6 @@ void Player::update(float dt,
       {
          if(rightCollisionTest())
          {
-            position.x = ceil(position.x) - playerBox.extents.x;
-            playerBox.setPosition(glm::vec3(position.x, position.y-0.5f, position.z));
             surfaceNormal = glm::vec3(-1.0f,0.0f,0.0f);
             surfaceNormal = (surfaceNormal * glm::dot(surfaceNormal, velocity));
             velocity -= surfaceNormal;
@@ -242,8 +252,6 @@ void Player::update(float dt,
       {
          if(backCollisionTest())
          {
-            position.z = floor(position.z) + playerBox.extents.z;
-            playerBox.setPosition(glm::vec3(position.x, position.y-0.5f, position.z));
             surfaceNormal = glm::vec3(0.0f,0.0f,1.0f);
             surfaceNormal = (surfaceNormal * glm::dot(surfaceNormal, velocity));
             velocity -= surfaceNormal;
@@ -254,8 +262,6 @@ void Player::update(float dt,
       {
          if(frontCollisionTest())
          {
-            position.z = ceil(position.z) - playerBox.extents.z;
-            playerBox.setPosition(glm::vec3(position.x, position.y-0.5f, position.z));
             surfaceNormal = glm::vec3(0.0f,0.0f,-1.0f);
             surfaceNormal = (surfaceNormal * glm::dot(surfaceNormal, velocity));
             velocity -= surfaceNormal;

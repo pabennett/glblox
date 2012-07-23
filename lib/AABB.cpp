@@ -14,7 +14,7 @@
 
 // To deal with floating point comparison problems.
 // Probably a better solution! TODO:
-float epsilon = 1e-2f; 
+float epsilon = 1e-1f; 
 
 AABB::AABB()
 {
