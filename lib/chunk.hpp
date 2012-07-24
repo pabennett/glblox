@@ -123,7 +123,6 @@ class Chunk
       GLint posAttrib;
       GLuint normAttrib;
       GLuint worldPosAttrib;
-      GLuint worldHeightAttrib;
       // Neighbour chunk references
       Chunk* leftNeighbour;                  // Pointer to neighbour chunk.
       Chunk* rightNeighbour;                 // Pointer to neighbour chunk.

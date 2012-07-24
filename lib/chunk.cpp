@@ -50,7 +50,6 @@ Chunk::Chunk(int chunk_x, int chunk_y, int chunk_z,
    posAttrib = glGetAttribLocation(program, "position");
    normAttrib = glGetUniformLocation(program, "normal");
    worldPosAttrib = glGetUniformLocation(program, "worldPosition");
-   worldHeightAttrib = glGetUniformLocation(program, "worldHeight");
 	glUseProgram(0);
 }
 
@@ -271,8 +270,7 @@ void Chunk::draw(GLuint program,
          
    // Tell GLSL the world coords of this chunk. 
    glUniform3fv(worldPosAttrib, 1, glm::value_ptr(pos));
-   // Tell GLSL the world height in voxels. 
-   glUniform1i(worldHeightAttrib, worldHeight);
+
    glEnableVertexAttribArray(posAttrib);   
    if(visibleFaceGroups.z == DRAW_FRONT or visibleFaceGroups.z == DRAW_BOTH_Z)
    {

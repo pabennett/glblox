@@ -30,6 +30,7 @@ World::World(int dimx, int dimy, int dimz,
    dim.x = dimx;
    dim.y = dimy;
    dim.z = dimz;
+   worldHeight = dim.y * chunk_size;
    xWrappingEnabled = xWrap;
    yWrappingEnabled = yWrap;
    zWrappingEnabled = zWrap;
@@ -45,6 +46,12 @@ World::World(int dimx, int dimy, int dimz,
    int octaves = 1;
    int randomseed = 3;
    terrainGen = new PerlinNoise(persistence,frequency,amplitude,octaves,randomseed);
+   
+   // Tell GLSL the world height in voxels. 
+	glUseProgram(renderProgram);
+   worldHeightAttrib = glGetUniformLocation(renderProgram, "worldHeight");
+   glUniform1i(worldHeightAttrib, worldHeight);
+	glUseProgram(0);
    
    // Build a world of chunks.
    // Ordering z,y,x is important.
@@ -65,7 +72,7 @@ World::World(int dimx, int dimy, int dimz,
                                                          << pos.z << std::endl;
             chunks[key] = new Chunk(pos.x, pos.y, pos.z, 
                                     chunk_size, 
-                                    dim.y * chunk_size,
+                                    worldHeight,
                                     renderProgram);
          }
       }
@@ -342,7 +349,7 @@ void World::draw(glm::vec3 camPosition, glm::mat4 mvp)
       // Not currently implemented.
       
       /* Draw Step */
-
+      
       // Call draw on all chunks to render them.
       for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {

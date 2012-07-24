@@ -44,6 +44,7 @@ class World
       // Properties
       vector3i dim;                                // World dimensions (chunks).
       int chunk_size;                              // Chunk dimensions (voxels).
+      int worldHeight;                             // World height in voxels.
       int vertices;                                // World vertices.
       glm::vec3 lastCamPosition;                   // Last camera position.
       bool useFastMeshBuilder;                     // Use fast mesh generation.
@@ -55,6 +56,7 @@ class World
       PerlinNoise* terrainGen;                     // Random terrain generator.
       bool randomTerrainEnabled;                   // Enable random terrain.
       GLuint renderProgram;                        // OpenGL shader program id.
+      GLuint worldHeightAttrib;
       
       /* Functions */
       
