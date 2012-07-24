@@ -16,15 +16,6 @@
 #include "simplex.c"
 #include "smallVolume.cpp"
 
-enum facePos { ABOVE, BELOW, LEFT, RIGHT, FRONT, BACK };
-enum xfacePos {DRAW_LEFT, DRAW_RIGHT, DRAW_BOTH_X};
-enum yfacePos {DRAW_ABOVE, DRAW_BELOW, DRAW_BOTH_Y};
-enum zfacePos {DRAW_FRONT, DRAW_BACK, DRAW_BOTH_Z};
-
-typedef struct{
-   xfacePos x; yfacePos y; zfacePos z;
-} faceGroup;
-
 class Chunk
 {                      
    public:      
@@ -57,11 +48,11 @@ class Chunk
       // Test if the mesh builder is running.
       bool meshBuildRunning();               
       // Render the chunk.
-      void draw(GLuint, glm::vec3);                        
+      void draw(GLuint);                        
       // Update display buffers for the chunk - calls mesh gen.   
       int update(bool,int);      
       // TODO: Implement this in the world class...
-      void setVisibleFaceGroup(glm::vec3);   
+      void setVisibleFaceGroup(faceGroup);   
       // Build the display list vector.
       void buildDisplayList();
       // Update the chunk world coords.

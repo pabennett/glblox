@@ -292,8 +292,9 @@ void World::draw(glm::vec3 camPosition, glm::mat4 mvp)
    int x,y,z;
    vertices = 0;
    int workDone;
+   bool cameraMoved = lastCamPosition != camPosition;
    lastCamPosition = camPosition;
-   glm::vec3 pos;
+   glm::vec3 chunkPos;
    glm::vec3 chunkCentre;
    glm::vec4 chunkClipCoords;
    float chunkDiameter;
@@ -310,8 +311,8 @@ void World::draw(glm::vec3 camPosition, glm::mat4 mvp)
       // and generate meshes to create the illusion of infinite space.
       if(region2DLoaderQueue.size() != 0)
       {
-         pos = region2DLoaderQueue.back()->position();
-         loadRegion(pos.x, pos.z);
+         chunkPos = region2DLoaderQueue.back()->position();
+         loadRegion(chunkPos.x, chunkPos.z);
          region2DLoaderQueue.pop_back();
          if(region2DLoaderQueue.size() == 0)
          {
@@ -324,7 +325,7 @@ void World::draw(glm::vec3 camPosition, glm::mat4 mvp)
       // a certain amount of work to be contributed towards mesh updates.
       else if(chunksAwaitingUpdate() != 0)
       {
-         // Use the fast mesh builder with 8000 work cycles.
+         // Use the fast mesh builder with 6000 work cycles.
          workDone = 0;
          while(workDone < 6000)
          {
@@ -353,10 +354,11 @@ void World::draw(glm::vec3 camPosition, glm::mat4 mvp)
       // Call draw on all chunks to render them.
       for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
       {
-         /* Frustrum culling & range checks */
+         /* Frustrum culling, range checks and back face culling */
          
          // Determine the clip space coords of the chunk centre.
          chunkCentre = (*i).second->getCentre();
+         chunkPos = (*i).second->position();
          chunkClipCoords = mvp * glm::vec4(chunkCentre, 1);
          chunkClipCoords.x /= chunkClipCoords.w;
          chunkClipCoords.y /= chunkClipCoords.w;
@@ -392,10 +394,32 @@ void World::draw(glm::vec3 camPosition, glm::mat4 mvp)
             }
             else
             {
-               // Render the chunk. Cam is used for back-face culling.
-               (*i).second->draw(renderProgram, camPosition);
-               // Update the vertex counter.
-               vertices += (*i).second->getVertexCount();
+               // If the camera has moved since the last draw call update the
+               // visible face group for this chunk.
+               if(cameraMoved)
+               {
+                  faceGroup visFaces;
+                  // Decide which faces in the x-axis are visible for this chunk.
+                  visFaces.x = camPosition.x < chunkPos.x ? DRAW_LEFT :
+                               camPosition.x > (chunkPos.x + chunk_size) ? 
+                               DRAW_RIGHT : DRAW_BOTH_X;
+                               
+                  // Decide which faces in the y-axis are visible for this chunk.
+                  visFaces.y = camPosition.y < chunkPos.y ? DRAW_BELOW :
+                               camPosition.y > (chunkPos.y + chunk_size) ? 
+                               DRAW_ABOVE : DRAW_BOTH_Y;
+                               
+                  // Decide which faces in the z-axis are visible for this chunk.
+                  visFaces.z = camPosition.z < chunkPos.z ? DRAW_BACK :
+                               camPosition.z > (chunkPos.z + chunk_size) ? 
+                               DRAW_FRONT : DRAW_BOTH_Z;
+                               
+                  (*i).second->setVisibleFaceGroup(visFaces);
+                  // Update the vertex counter.
+                  vertices += (*i).second->getVertexCount();
+               }
+               // Draw the chunk.
+               (*i).second->draw(renderProgram);
             }
          }
       }

@@ -78,4 +78,24 @@ struct collisionStatus
                    top(top), bottom(bottom) {}
 }; 
 
+enum facePos {ABOVE, BELOW, LEFT, RIGHT, FRONT, BACK };
+enum xfacePos {DRAW_LEFT, DRAW_RIGHT, DRAW_BOTH_X};
+enum yfacePos {DRAW_ABOVE, DRAW_BELOW, DRAW_BOTH_Y};
+enum zfacePos {DRAW_FRONT, DRAW_BACK, DRAW_BOTH_Z};
+
+struct faceGroup{
+   xfacePos x; yfacePos y; zfacePos z;
+   faceGroup(xfacePos x = DRAW_LEFT, 
+             yfacePos y = DRAW_BELOW,
+             zfacePos z = DRAW_FRONT) : x(x), y(y), z(z) {}
+};
+
+bool operator!=(const faceGroup &a, const faceGroup &b)
+{
+   if(a.x != b.x or a.y != b.y or a.z != b.z) return true;
+   
+   return false;
+}
+
+
 

@@ -81,137 +81,53 @@ glm::vec3 Chunk::getCentre()
    return centre;
 }
 
-// Set which faces are visible (TODO: Move to World class)
-void Chunk::setVisibleFaceGroup(glm::vec3 camPosition)
-{  
-
-   vector3i cam;
-   cam.x = (int)camPosition.x;
-   cam.y = (int)camPosition.y;
-   cam.z = (int)camPosition.z;
-   bool rebuildDisplayList = false;
-   verticesRenderedCount = 0;
-   if(cam.x < pos.x)
+// Set which faces are visible from the current eye point.
+void Chunk::setVisibleFaceGroup(faceGroup visibleFaces)
+{
+   if(visibleFaceGroups != visibleFaces)
    {
-      verticesRenderedCount += verticesLeft.size();
-      if(visibleFaceGroups.x != DRAW_LEFT)
-      {
-         visibleFaceGroups.x = DRAW_LEFT;
-         rebuildDisplayList = true;
-      }
-   }
-   else if(cam.x > (pos.x + chunk_size))
-   {
-      verticesRenderedCount += verticesRight.size();
-      if(visibleFaceGroups.x != DRAW_RIGHT)
-      {
-         visibleFaceGroups.x = DRAW_RIGHT;
-         rebuildDisplayList = true;
-      }
-   }
-   else 
-   {
-      verticesRenderedCount += verticesLeft.size();
-      verticesRenderedCount += verticesRight.size();
-      if(visibleFaceGroups.x != DRAW_BOTH_X)
-      {
-         visibleFaceGroups.x = DRAW_BOTH_X;
-         rebuildDisplayList = true;
-      }
-   }
-   if(cam.y < pos.y)
-   {
-      verticesRenderedCount += verticesBelow.size();
-      if(visibleFaceGroups.y != DRAW_BELOW)
-      {
-         visibleFaceGroups.y = DRAW_BELOW;
-         rebuildDisplayList = true;
-      }
-   }
-   else if(cam.y > (pos.y + chunk_size))
-   {
-      verticesRenderedCount += verticesAbove.size();
-      if(visibleFaceGroups.y != DRAW_ABOVE)
-      {
-         visibleFaceGroups.y = DRAW_ABOVE;
-         rebuildDisplayList = true;
-      }
-   }
-   else 
-   {
-      verticesRenderedCount += verticesAbove.size();
-      verticesRenderedCount += verticesBelow.size();
-      if(visibleFaceGroups.y != DRAW_BOTH_Y)
-      {
-         visibleFaceGroups.y = DRAW_BOTH_Y;
-         rebuildDisplayList = true;
-      }
-   }
-   if(cam.z < pos.z)
-   {
-      verticesRenderedCount += verticesBack.size();
-      if(visibleFaceGroups.z != DRAW_BACK)
-      {
-         visibleFaceGroups.z = DRAW_BACK;
-         rebuildDisplayList = true;
-      }
-   }
-   else if(cam.z > (pos.z + chunk_size))
-   {
-      verticesRenderedCount += verticesFront.size();
-      if(visibleFaceGroups.z != DRAW_FRONT)
-      {
-         visibleFaceGroups.z = DRAW_FRONT;
-         rebuildDisplayList = true;
-      }
-   }
-   else 
-   {
-      verticesRenderedCount += verticesFront.size();
-      verticesRenderedCount += verticesBack.size();
-      if(visibleFaceGroups.z != DRAW_BOTH_Z)
-      {
-         visibleFaceGroups.z = DRAW_BOTH_Z;
-         rebuildDisplayList = true;
-      }
-   }
-   if(rebuildDisplayList)
-   {
-      rebuildDisplayList = false;
-      buildDisplayList();
+   visibleFaceGroups = visibleFaces;
+   buildDisplayList();
    }
 }
 
 // Bind the appropriate vertex arrays if they are visible and contain data.
 void Chunk::buildDisplayList()
 {
+   verticesRenderedCount = 0;
    if(!verticesFront.empty() and (visibleFaceGroups.z == DRAW_FRONT or visibleFaceGroups.z == DRAW_BOTH_Z))
    {
+      verticesRenderedCount += verticesFront.size();
       glBindBuffer(GL_ARRAY_BUFFER, verticesFrontVBO);
       glBufferData(GL_ARRAY_BUFFER, verticesFront.size() * sizeof(vertex), &verticesFront[0], GL_STATIC_DRAW);
    }
    if(!verticesBack.empty() and (visibleFaceGroups.z == DRAW_BACK or visibleFaceGroups.z == DRAW_BOTH_Z))
    {
+      verticesRenderedCount += verticesBack.size();
       glBindBuffer(GL_ARRAY_BUFFER, verticesBackVBO);
       glBufferData(GL_ARRAY_BUFFER, verticesBack.size() * sizeof(vertex), &verticesBack[0], GL_STATIC_DRAW);
    }
    if(!verticesLeft.empty() and (visibleFaceGroups.x == DRAW_LEFT or visibleFaceGroups.x == DRAW_BOTH_X))
    {
+      verticesRenderedCount += verticesLeft.size();
       glBindBuffer(GL_ARRAY_BUFFER, verticesLeftVBO);
       glBufferData(GL_ARRAY_BUFFER, verticesLeft.size() * sizeof(vertex), &verticesLeft[0], GL_STATIC_DRAW);
    }
    if(!verticesRight.empty() and (visibleFaceGroups.x == DRAW_RIGHT or visibleFaceGroups.x == DRAW_BOTH_X))
    {
+      verticesRenderedCount += verticesRight.size();
       glBindBuffer(GL_ARRAY_BUFFER, verticesRightVBO);
       glBufferData(GL_ARRAY_BUFFER, verticesRight.size() * sizeof(vertex), &verticesRight[0], GL_STATIC_DRAW);
    }
    if(!verticesAbove.empty() and (visibleFaceGroups.y == DRAW_ABOVE or visibleFaceGroups.y == DRAW_BOTH_Y))
    {
+      verticesRenderedCount += verticesAbove.size();
       glBindBuffer(GL_ARRAY_BUFFER, verticesAboveVBO);
       glBufferData(GL_ARRAY_BUFFER, verticesAbove.size() * sizeof(vertex), &verticesAbove[0], GL_STATIC_DRAW);
    }
    if(!verticesBelow.empty() and (visibleFaceGroups.y == DRAW_BELOW or visibleFaceGroups.y == DRAW_BOTH_Y))
    {
+      verticesRenderedCount += verticesBelow.size();
       glBindBuffer(GL_ARRAY_BUFFER, verticesBelowVBO);
       glBufferData(GL_ARRAY_BUFFER, verticesBelow.size() * sizeof(vertex), &verticesBelow[0], GL_STATIC_DRAW);
    }
@@ -256,8 +172,7 @@ int Chunk::getVertexCount()
 }
 
 // Draw the chunk mesh.
-void Chunk::draw(GLuint program, 
-                 glm::vec3 camPosition)
+void Chunk::draw(GLuint program)
 {
    // If there is nothing to draw then abort early.
    if(!visible)
@@ -266,7 +181,6 @@ void Chunk::draw(GLuint program,
    }
          
 	glUseProgram(program);
-   setVisibleFaceGroup(camPosition);
          
    // Tell GLSL the world coords of this chunk. 
    glUniform3fv(worldPosAttrib, 1, glm::value_ptr(pos));
