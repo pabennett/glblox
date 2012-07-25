@@ -10,7 +10,7 @@ __email__ = "pab850@googlemail.com"
 __contact__ = "www.bytebash.com"
 
 
-from pyglet.window import key
+from pyglet.window import key, mouse
 from pyglet import clock
 
 """ Statename strings """
@@ -35,13 +35,19 @@ class Controller(object):
         self.keyPressEvents = {}
         
         clock.schedule(self.update)
-        
+                
         window.push_handlers(self.on_key_press)
         window.push_handlers(self.on_key_release)
         window.push_handlers(self.keys)
         window.push_handlers(self.on_mouse_motion)
+        window.push_handlers(self.on_mouse_drag)
+        window.push_handlers(self.on_mouse_press)
+        window.push_handlers(self.on_mouse_release)
         
     def on_mouse_motion(self, x, y, dx, dy):
+        self.player.orient(dx*0.08, -dy*0.08)
+        
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         self.player.orient(dx*0.08, -dy*0.08)
         
     def keyPressed(self, symbol):
@@ -55,7 +61,19 @@ class Controller(object):
                            self.keyPressed(key.W),
                            self.keyPressed(key.S),
                            self.keyPressed(key.A),
-                           self.keyPressed(key.D))               
+                           self.keyPressed(key.D))       
+                           
+    def on_mouse_press(self, x, y, button, modifiers):
+        if button == mouse.LEFT:
+            if not self.keyPressed(mouse.LEFT):
+                self.player.fire()
+                
+        if button == mouse.RIGHT:
+            if not self.keyPressed(mouse.RIGHT):
+                self.player.altFire()
+    
+    def on_mouse_release(self, x, y, button, modifiers):
+        self.keyPressEvents[button] = False
 
     def on_key_press(self, symbol, modifiers):
         # Handle events that only require one action per keypress here.

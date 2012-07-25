@@ -12,7 +12,11 @@
 
 #include "projectile.hpp"
 
-Projectile::Projectile(World* world, glm::vec3 position, glm::vec3 velocity, GLuint program) 
+Projectile::Projectile(World* world, 
+                       glm::vec3 position, 
+                       glm::vec3 velocity, 
+                       GLuint program,
+                       int blockType) 
 {              
    Projectile::position = position;
    Projectile::velocity = velocity;
@@ -20,6 +24,7 @@ Projectile::Projectile(World* world, glm::vec3 position, glm::vec3 velocity, GLu
    Projectile::program = program;
    Projectile::hitbox = AABB(position, glm::vec3(0.5f, 0.5f, 0.5f));
    Projectile::age = 0.0f;
+   Projectile::blockType = blockType;
    
    glGenBuffers(1, &VBO);
    
@@ -81,7 +86,7 @@ Projectile::Projectile(World* world, glm::vec3 position, glm::vec3 velocity, GLu
 Projectile::~Projectile()
 {
    vertices.clear();   
-   worldPtr->modifyRegionAt(position.x, position.y, position.z, 0, 5);
+   worldPtr->modifyRegionAt(position.x, position.y, position.z, blockType, 5);
 }
 
 void Projectile::update(float dt)

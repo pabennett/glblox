@@ -2,7 +2,7 @@ class Projectile
 {                      
    public:      
       // Construct
-      Projectile(World*, glm::vec3, glm::vec3, GLuint);
+      Projectile(World*, glm::vec3, glm::vec3, GLuint, int);
       // Destruct
       ~Projectile();
 
@@ -13,7 +13,7 @@ class Projectile
    private:
       bool collisionTest();
       float age;
-      
+      int blockType;
       glm::vec3 velocity;
       glm::vec3 position;
       AABB hitbox;

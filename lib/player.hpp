@@ -11,7 +11,7 @@ class Player
       void move(float, float, float);
       void setFlightMode(bool);
       void jump();
-      void fire();
+      void fire(int);
       void orient(float, float);
       void setCameraMVP();
       void update(float, bool, bool, bool, bool);

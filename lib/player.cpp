@@ -78,6 +78,7 @@ void Player::setFlightMode(bool flightEnabled)
 {
    Player::flightEnabled = flightEnabled;
    playerCamera->setFlightMode(flightEnabled);
+   gravityEnabled = not flightEnabled;
 }
    
 // Jump!
@@ -90,10 +91,10 @@ void Player::jump()
 }
 
 //Shoot!
-void Player::fire()
+void Player::fire(int mode)
 {
    glm::vec3 pVelocity = playerCamera->getCameraForward() * 150.0f;
-   projectiles.push_back(new Projectile(world, position, pVelocity, program));
+   projectiles.push_back(new Projectile(world, position, pVelocity, program, mode));
 }
 
 // Physics update for player

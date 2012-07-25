@@ -61,9 +61,9 @@ extern "C" {
       obj->update(dt, movingForward, movingBackward, movingLeft, movingRight);
    }
    
-   void playerFire(Player* obj)
+   void playerFire(Player* obj, int mode)
    {
-      obj->fire();
+      obj->fire(mode);
    }
    
    void playerDraw(Player* obj)
