@@ -45,10 +45,10 @@ class Controller(object):
         window.push_handlers(self.on_mouse_release)
         
     def on_mouse_motion(self, x, y, dx, dy):
-        self.player.orient(dx*0.08, -dy*0.08)
+        self.player.orient(-dy*0.08, dx*0.08)
         
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        self.player.orient(dx*0.08, -dy*0.08)
+        self.player.orient(-dy*0.08, dx*0.08)
         
     def keyPressed(self, symbol):
         if symbol in self.keyPressEvents:

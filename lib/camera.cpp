@@ -113,16 +113,6 @@ glm::fquat Camera::fromAxisAngle(const glm::vec3 axis, float degrees)
 glm::fquat Camera::orient(float pitch , float yaw)
 {
    glm::fquat rotation;
-   // Apply the x-axis delta to the quaternion.
-   // Yaw causes the camera to rotate around the WORLD's Y-axis.
-   // We need to left multiply the quaternions because the yaw
-   // rotation is in world space.
-   if (yaw != 0)
-   {  
-      rotation = fromAxisAngle(WORLD_XAXIS, yaw);   
-      orientation = rotation * orientation;
-      orientation = glm::normalize(orientation);
-   }
    
    // Apply the y-axis delta to the quaternion.
    // Pitch causes the camera to rotate around the CAMERA's X-axis.
@@ -130,11 +120,22 @@ glm::fquat Camera::orient(float pitch , float yaw)
    // rotation is in model space.
    if (pitch != 0)
    {
-      rotation = fromAxisAngle(WORLD_YAXIS, pitch);  
-      orientation = orientation * rotation;
+      rotation = fromAxisAngle(WORLD_XAXIS, pitch);  
+      orientation = rotation * orientation;
       orientation = glm::normalize(orientation);
    }
    
+   // Apply the x-axis delta to the quaternion.
+   // Yaw causes the camera to rotate around the WORLD's Y-axis.
+   // We need to left multiply the quaternions because the yaw
+   // rotation is in world space.
+   if (yaw != 0)
+   {  
+      rotation = fromAxisAngle(WORLD_YAXIS, yaw);   
+      orientation = orientation * rotation;
+      orientation = glm::normalize(orientation);
+   }
+      
    updateView();
    return orientation;
 }
@@ -204,6 +205,8 @@ void Camera::updateView()
    m_xaxis = glm::vec3(view[0][0], view[1][0], view[2][0]);
    m_yaxis = glm::vec3(view[0][1], view[1][1], view[2][1]);
    m_zaxis = glm::vec3(view[0][2], view[1][2], view[2][2]);
+   
+   //std::cout << "CPP: mAXIS= " << m_xaxis.x << "," << m_xaxis.y << "," << m_xaxis.z << std::endl;
    
    // Apply translation component.
    view[3][0] = -glm::dot(m_xaxis, position);

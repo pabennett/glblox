@@ -70,7 +70,7 @@ class Camera:
     def setPos(self, x, y ,z):
         vol_lib.C_setPos(self.obj, x, y, z)
     def orient(self, yaw, pitch):
-        vol_lib.C_Orient(self.obj, yaw, pitch)
+        vol_lib.C_Orient(self.obj, pitch, yaw)
     def move(self, dx, dy, dz):
         vol_lib.C_Move(self.obj, dx, dy, dz)
     def getPos(self):
@@ -111,6 +111,8 @@ class World:
         vol_lib.worldDraw(self.obj, camera.obj)
     def fillSpheres(self):
         vol_lib.worldFillSpheres(self.obj)
+    def fillSphere(self):
+        vol_lib.worldFillSphere(self.obj)
     def fill(self):
         vol_lib.worldFill(self.obj)
     def random(self):
