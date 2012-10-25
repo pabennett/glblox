@@ -13,6 +13,7 @@ class World
       ~World();                                    // Destruct
       void draw(glm::vec3, glm::mat4);             // Draw the world.
       void fillSpheres();                          // Fill world with spheres.
+      void sphere();                               // Fill with world with a sphere.
       void fillPyramids();                         // Fill world with pyramids.
       void fill();                                 // Fill world.
       void random();                               // Random world.

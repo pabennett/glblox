@@ -687,6 +687,46 @@ void World::chunkUpdateQuery()
    }
 }
 
+void World::sphere()
+{
+   int radius = (dim.x * chunk_size)/2;
+   int r_sq = radius * radius;
+   int h = radius;
+   glm::vec3 chunkPos;
+   int cx,cy,cz;
+   
+   if(!chunks.empty())
+   {
+      int64 time = GetTimeMs64();
+      for(std::map<vector3i,Chunk*>::iterator i = chunks.begin(); i != chunks.end(); ++i)
+      {
+         std::cout << "CPP: Filling chunk with sphere data..." << std::endl;
+         (*i).second->empty();
+         chunkPos = (*i).second->position();
+         cx = int(chunkPos.x);
+         cy = int(chunkPos.y);
+         cz = int(chunkPos.z);
+         
+         for(int x = 0; x < chunk_size; x++)
+         {
+            for(int y = 0; y < chunk_size; y++)
+            {
+               for(int z = 0; z < chunk_size; z++)
+               {
+                  if ((((cx+x)-h)*((cx+x)-h) + ((cy+y)-h)*((cy+y)-h) + ((cz+z)-h)*((cz+z)-h)) < r_sq)
+                  {
+                     (*i).second->set(x,y,z,1);
+                  }
+               }
+            }
+         }
+      }
+      std::cout << "CPP: ... fill complete (" << GetTimeMs64() - time << "ms)" << std::endl;
+   }
+   World::chunkUpdateQuery(); // Add modified chunks to the update queue.
+}
+
+
 void World::fillSpheres()
 {
    // Create a volume where each chunk contains a sphere.

@@ -202,6 +202,11 @@ extern "C" {
       world->fillSpheres();
    }
    
+   void worldFillSphere(World* world)
+   {
+      world->sphere();
+   }
+   
    void worldFill(World* world)
    {
       world->fill();
