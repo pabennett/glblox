@@ -1,13 +1,8 @@
-#!/usr/bin/env python
-
-""" Description..."""
-
 __author__ = "Peter Bennett"
 __copyright__ = "Copyright 2012, Peter A Bennett"
 __license__ = "LGPL"
-__version__ = "0.1"
 __maintainer__ = "Peter Bennett"
-__email__ = "pab850@googlemail.com"
+__email__ = "pab850@gmail.com"
 __contact__ = "www.bytebash.com"
 
 import pyglet
@@ -25,6 +20,7 @@ class Console:
         self.label = pyglet.text.Label(font_name='Consolas',
                                        font_size=10,
                                        x=self.x,
+                                       color = (255, 255, 255, 255),
                                        y=self.y,
                                        width=self.width,
                                        multiline=True)  
@@ -62,10 +58,12 @@ class StatusConsole:
         self.paramCount = 0
         self.x = x
         self.y = y
+        self.title = ''
         self.width = width
-        self.label = pyglet.text.Label("...",
+        self.label = pyglet.text.Label(self.title,
                                        font_name='Consolas',
                                        font_size=10,
+                                       color = (255, 255, 255, 255),
                                        x=self.x,
                                        y=self.y,
                                        width=self.width,
@@ -78,9 +76,12 @@ class StatusConsole:
         if(self.parameters.has_key(parameter)):
             self.parameters[parameter] = value
             self.modified = True
-       
+    def setTitle(self, string=''):
+        self.title = string
     def updateLabel(self):
-        self.label.text = ''.join([str(a) + " : " + str(b) + '\n' for a,b in self.parameters.items()])
+        s = ''.join([str(a) + " : " + str(b) + '\n' for a,b in self.parameters.items()])
+        s = self.title + '\n' + s
+        self.label.text = s
     def draw(self):
         if(self.modified):
             self.updateLabel()
