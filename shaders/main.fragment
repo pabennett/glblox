@@ -1,0 +1,90 @@
+#version 400
+
+precision mediump float;
+
+out vec3 fragment;
+varying float texcoord;
+
+in Data{
+    vec3 fnormal;
+    float depth;
+} data;
+
+const float pi = 3.141592653589793238462643383279;
+const float e = 2.71828182845904523536028747135266249;
+
+vec3 fog(vec3 color, vec3 fcolor, float depth, float density){
+   float f=pow(e, -pow(depth*density, 2));
+   return mix(fcolor, color, f);
+}
+
+vec3 jet(float x){
+   x = 4*x;
+   float red = clamp(min(x - 1.5, -x + 4.5),0.0,1.0);
+   float green = clamp(min(x - 0.5, -x + 3.5),0.0,1.0);
+   float blue  = clamp(min(x + 0.5, -x + 2.5),0.0,1.0);   
+   return vec3(red, green, blue);
+}
+
+vec3 thermal(float x){
+   // Thermal colourmap LUT
+   const vec3 THERMAL_MAP[5] = vec3[](
+      vec3(0, 0, 0),
+      vec3(0.3, 0, 0.7),
+      vec3(1, 0.2, 0),
+      vec3(1, 1, 0),
+      vec3(1, 1, 1)
+   );
+   
+   // Compute LUT index and lerp value
+   int i = int(floor(x / 0.25));
+   float lerp = fract(x / 0.25);
+
+   // R,G,B Output
+   float red;
+   float green;
+   float blue;
+   
+   if (x != 1.0){
+      // Lerp between LUT entries for input values < 1.0
+      red = mix(THERMAL_MAP[i].x, THERMAL_MAP[i+1].x, lerp); 
+      green = mix(THERMAL_MAP[i].y, THERMAL_MAP[i+1].y, lerp); 
+      blue = mix(THERMAL_MAP[i].z, THERMAL_MAP[i+1].z, lerp); 
+   }
+   else{
+      // If the input is maximum just return the upper LUT entry.
+      red = THERMAL_MAP[4].x;
+      green = THERMAL_MAP[4].y;
+      blue = THERMAL_MAP[4].z;
+   }
+   return vec3(red, green, blue);
+}
+
+void main(){   
+    float red, green, blue;
+    vec3 colours;
+  
+    colours = jet(data.depth);
+    red = colours.x;
+    green = colours.y;
+    blue = colours.z;
+  
+    // Attenuate facecolour for each normal to accentuate the cubes.
+    if(data.fnormal.y == 0){
+        red = red * 0.95;
+        green = green * 0.95;
+        blue = blue * 0.95;
+        if(data.fnormal.x == 0){
+            red = red * 0.95;
+            green = green * 0.95;
+            blue = blue * 0.95;
+            if(data.fnormal.z == 0){
+                red = red * 0.95;
+                green = green * 0.95;
+                blue = blue * 0.95;
+            }
+        }
+    }
+
+    gl_FragColor = vec4(fog(vec3(red, green, blue),vec3(0.95, 0.95, 0.95),data.depth,0.003),1.0);
+}
