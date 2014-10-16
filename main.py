@@ -2,8 +2,8 @@
 
 """This module uses the glblox c++ library to create and render voxel volumes
 as a triangular mesh. The OpenGL wrapper Pyglet is used to create a window
-within Python and the Gletools library is used to compile fragment and vertex
-shaders.""" 
+within Python.
+"""
 
 __author__ = "Peter Bennett"
 __copyright__ = "Copyright 2012, Peter A Bennett"
@@ -16,7 +16,7 @@ __date__ = "$Date: 2012-03-11 15:19:25 +0000 (Sun, 11 Mar 2012) $"
 
 import pyglet
 from pyglet.gl import *
-from gletools import ShaderProgram
+import shader
 
 from pyglet import clock
 from pyglet import font
@@ -30,7 +30,10 @@ from ctypes import c_byte
 import console
 import controller
 
-program = ShaderProgram.open('shaders/main.shader')
+program = shader.openfiles(  
+    'shaders/main.vertex',
+    'shaders/main.fragment'
+)
 
 # Set up the Window (pyglet)
 config = Config(buffers=2, samples=4)
