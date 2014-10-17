@@ -1,5 +1,5 @@
 #include "AABB.cpp"
-#include "Projectile.cpp"
+#include "projectile.cpp"
 
 class Player
 {                      
