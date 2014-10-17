@@ -33,7 +33,7 @@ def module_path():
         return os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding( )))
     return os.path.dirname(unicode(__file__, sys.getfilesystemencoding( )))
     
-here = module_path() + "\lib"
+here = join(module_path(), "lib")
 path = join(here, 'glblox.so')
 
 print "Loading library: " + path
