@@ -23,7 +23,7 @@ from pyglet import font
 
 from external import Camera, World, Player
 
-import Image
+from PIL import Image
 
 from ctypes import c_byte
 
