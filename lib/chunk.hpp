@@ -2,7 +2,6 @@
 #define GLEW_STATIC
 #endif
 #include <GL/glew.h>
-#include <GL/wglew.h>
 
 #include <iostream>
 #include <new>
