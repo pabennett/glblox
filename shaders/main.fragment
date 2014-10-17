@@ -3,7 +3,7 @@
 precision mediump float;
 
 out vec3 fragment;
-varying float texcoord;
+//varying float texcoord;
 
 in Data{
     vec3 fnormal;
@@ -14,12 +14,12 @@ const float pi = 3.141592653589793238462643383279;
 const float e = 2.71828182845904523536028747135266249;
 
 vec3 fog(vec3 color, vec3 fcolor, float depth, float density){
-   float f=pow(e, -pow(depth*density, 2));
+   float f=pow(e, -pow(depth*density, 2.0));
    return mix(fcolor, color, f);
 }
 
 vec3 jet(float x){
-   x = 4*x;
+   x = 4.0*x;
    float red = clamp(min(x - 1.5, -x + 4.5),0.0,1.0);
    float green = clamp(min(x - 0.5, -x + 3.5),0.0,1.0);
    float blue  = clamp(min(x + 0.5, -x + 2.5),0.0,1.0);   
@@ -38,7 +38,7 @@ vec3 thermal(float x){
    
    // Compute LUT index and lerp value
    int i = int(floor(x / 0.25));
-   float lerp = fract(x / 0.25);
+   float lerp = float(fract(x / 0.25));
 
    // R,G,B Output
    float red;
@@ -70,15 +70,15 @@ void main(){
     blue = colours.z;
   
     // Attenuate facecolour for each normal to accentuate the cubes.
-    if(data.fnormal.y == 0){
+    if(data.fnormal.y == 0.0){
         red = red * 0.95;
         green = green * 0.95;
         blue = blue * 0.95;
-        if(data.fnormal.x == 0){
+        if(data.fnormal.x == 0.0){
             red = red * 0.95;
             green = green * 0.95;
             blue = blue * 0.95;
-            if(data.fnormal.z == 0){
+            if(data.fnormal.z == 0.0){
                 red = red * 0.95;
                 green = green * 0.95;
                 blue = blue * 0.95;
