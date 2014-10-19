@@ -9,11 +9,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#define GLM_FORCE_RADIANS
+
 #ifndef GLEW_STATIC
 #define GLEW_STATIC
 #endif
 #include <GL/glew.h>    // OpenGL Extension Wrangler
-#include <GL/wglew.h>
 
 #include <iostream>
 #include "types.hpp"    // Collection of common types.

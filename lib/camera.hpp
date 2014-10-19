@@ -3,7 +3,6 @@
 #endif
 // OpenGL extension wrangler
 #include <GL/glew.h>
-#include <GL/wglew.h>
 
 #include <iostream>
 #include <cstring>
