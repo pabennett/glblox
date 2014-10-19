@@ -29,7 +29,9 @@ class Controller(object):
         # States
         self.states = {}
         self.states[wireframe] = False
-        self.states[flight] = False        
+        self.states[flight] = False   
+
+        self.mouse_speed = 0.0014     
         
         # Key Press Events
         self.keyPressEvents = {}
@@ -45,10 +47,10 @@ class Controller(object):
         window.push_handlers(self.on_mouse_release)
         
     def on_mouse_motion(self, x, y, dx, dy):
-        self.player.orient(-dy*0.08, dx*0.08)
+        self.player.orient(-dy*self.mouse_speed, dx*self.mouse_speed)
         
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        self.player.orient(-dy*0.08, dx*0.08)
+        self.player.orient(-dy*self.mouse_speed, dx*self.mouse_speed)
         
     def keyPressed(self, symbol):
         if symbol in self.keyPressEvents:

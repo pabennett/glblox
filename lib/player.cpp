@@ -323,6 +323,7 @@ float Player::getPlayerVelocityZ()
 }
 
 // Orientation is manipulated by moving the mouse.
+// Arguments are in radians
 void Player::orient(float pitch , float yaw)
 {
    orientation = playerCamera->orient(pitch, yaw);

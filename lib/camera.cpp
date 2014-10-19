@@ -46,7 +46,7 @@ void Camera::perspective(int w, int h, float vertFOV, float frustrumNear, float 
 {
    zFar = frustrumFar;
    zNear = frustrumNear;
-   fovy = vertFOV;
+   fovy = (vertFOV*PI)/180.0f;
    width = w;
    height = h<=0?1:h;
    aspect = (float)width / (float)height;
@@ -100,16 +100,16 @@ void Camera::setMVP()
 }
 
 
-// Generates a quaternion from the given axis and rotation in degrees.
-glm::fquat Camera::fromAxisAngle(const glm::vec3 axis, float degrees)
+// Generates a quaternion from the given axis and rotation in radians.
+glm::fquat Camera::fromAxisAngle(const glm::vec3 axis, float radians)
 {
-    float halfTheta = (degrees * (PI / 180.0f))  / 2.0f;
-    float s = sinf(halfTheta);
-    return glm::fquat(cos(halfTheta), axis.x * s, axis.y * s, axis.z * s);
+    float half_theta = radians / 2.0;
+    float s = sinf(half_theta);
+    return glm::fquat(cos(half_theta), axis * s);
 }
 
 // Orientates the camera by applying the given pitch and yaw values
-// in degrees to the camera's current orientation.
+// in radians to the camera's current orientation.
 glm::fquat Camera::orient(float pitch , float yaw)
 {
    glm::fquat rotation;
